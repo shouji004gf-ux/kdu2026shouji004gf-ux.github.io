@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>秋季関東歯科学生洋弓大会 スコア</title>
+<style>
+:root{--bg:#f2f4f7;--cd:#fff;--fg:#1c2230;--mu:#6b7385;--ln:#d9dee6;--ac:#1f6feb;--ink:#222}
+@media(prefers-color-scheme:dark){:root{--bg:#12151b;--cd:#1c212a;--fg:#e8ebf0;--mu:#98a1b3;--ln:#2e3542;--ac:#5b9dff;--ink:#dfe3ea}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.4 system-ui,-apple-system,"Hiragino Sans","Meiryo",sans-serif}
+button,select,input,textarea{font:inherit;color:var(--fg)}
+button,select{background:var(--cd);border:1px solid var(--ln);border-radius:9px;padding:9px 10px;cursor:pointer}
+button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;font-size:14px}
+.stk{position:sticky;top:0;z-index:8;background:var(--bg);padding:0 8px 6px}
+.seg{display:flex;gap:4px;margin-top:4px}.seg button{flex:1;padding:9px 2px;font-size:13px}
+main{max-width:720px;margin:0 auto;padding:4px 8px 24px}
+body.hp main{padding-bottom:270px}
+.card{background:var(--cd);border:1px solid var(--ln);border-radius:12px;padding:10px;margin-bottom:10px}
+.mu{color:var(--mu);font-size:12px}
+.sel{display:flex;gap:6px;margin-bottom:8px}.sel .who{flex:1;text-align:left;line-height:1.25;min-width:0}.sel .who small{display:block;color:var(--mu)}
+.sh{display:flex;justify-content:space-between;font-size:12px;border:2px solid var(--ink);border-bottom:0;padding:4px 6px}
+.st{width:100%;table-layout:fixed;border-collapse:collapse;border:2px solid var(--ink)}
+.st th,.st td{border:1px solid var(--ink);text-align:center;padding:0;height:40px;font-size:14px}
+.st th{height:26px;font-size:11px;font-weight:400}
+.st td.en{font-weight:700;font-size:16px}
+.st td.ac{font-size:22px;font-weight:700;scroll-margin:130px 0 210px}
+.st td.cur{outline:3px solid var(--ac);outline-offset:-3px}
+.st tfoot td{height:42px;font-weight:700;font-size:18px}
+.s-X,.s-10,.s-9{background:#f7d23e;color:#222}.s-8,.s-7{background:#e5483d;color:#fff}
+.s-6,.s-5{background:#3b82f6;color:#fff}.s-4,.s-3{background:#222;color:#fff}
+.s-2,.s-1{background:#fff;color:#222}.s-M{background:#8a93a5;color:#fff}
+#pad{display:none;position:fixed;left:0;right:0;bottom:0;z-index:9;background:var(--cd);border-top:1px solid var(--ln);padding:8px 8px calc(8px + env(safe-area-inset-bottom))}
+body.hp #pad{display:block}
+.keys{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;max-width:720px;margin:auto}
+.keys button{height:46px;font-size:19px;font-weight:700;padding:0;border:1px solid transparent}
+.keys .s-2,.keys .s-1{border-color:#999}
+.keys .w{grid-column:span 3;font-size:15px;background:var(--cd);color:var(--fg);border-color:var(--ln)}
+button:disabled{opacity:.45;cursor:not-allowed}.st td.locked{box-shadow:inset 0 0 0 2px #237565;cursor:not-allowed}.st td.en small{display:block;font-size:10px;color:#237565}.recordbar{max-width:720px;margin:0 auto 8px;display:flex;align-items:center;gap:10px}.recordbar button{background:#237565;color:white;font-weight:700;min-width:140px}.recordbar span{font-size:12px}.recordbar .warn{color:#d33;font-weight:700}.recordbar button.alert{animation:pulse .6s ease-in-out 3;box-shadow:0 0 0 3px rgba(211,51,51,.55)}@keyframes pulse{50%{transform:scale(1.07)}}
+#pick{display:none;position:fixed;inset:0;z-index:20;background:var(--bg);overflow:auto;padding:8px}
+#pick.on{display:block}
+.mh{display:flex;justify-content:space-between;align-items:center;padding:6px 2px;position:sticky;top:0;background:var(--bg)}
+.mg{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px}
+.tc{display:flex;gap:6px;align-items:stretch;background:var(--cd);border:1px solid var(--ln);border-radius:10px;padding:6px}
+.tc>b{width:24px;display:flex;align-items:center;justify-content:center}
+.tc button{flex:1;min-width:0;text-align:left;padding:8px 6px;font-size:13px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.tc i{font-style:normal;color:var(--mu);margin-right:4px}
+.tc .sel2{outline:3px solid var(--ac)}.tc .done{background:#d9f2dd;color:#14411d}.tc .part{background:#fff3cd;color:#5a4500}
+.bc{display:flex;gap:10px;align-items:center}
+.rk{width:30px;font-size:20px;font-weight:700;text-align:center}
+.bi{flex:1;min-width:0}.bi b{display:block}
+.bt{font-size:26px;font-weight:700;text-align:right}.bt small{font-size:11px;color:var(--mu);font-weight:400}
+.rr{display:grid;grid-template-columns:26px 1fr 54px 62px;gap:4px;margin-top:6px}
+.rr .ab{grid-row:1/3;align-self:center;font-weight:700}
+.rr input,.rr select,textarea,.in{width:100%;min-width:0;padding:8px;border:1px solid var(--ln);border-radius:8px;background:var(--bg);font-size:16px}
+.f1{grid-column:2/5}.f2{grid-column:2}.f3{grid-column:3}.f4{grid-column:4}
+.tn{font-weight:700}
+textarea{height:110px;font-family:monospace;font-size:13px}
+ol{padding-left:20px;margin:6px 0}li{margin:3px 0}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px}
+#toast{position:fixed;left:8px;right:8px;top:calc(8px + env(safe-area-inset-top));z-index:30;max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:6px;pointer-events:none}#toast div{pointer-events:auto;background:#7a1f1f;color:#fff;padding:10px 12px;border-radius:10px;font-size:14px;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.st td.oth{outline:2px dashed var(--pc);outline-offset:-2px}.peerw{max-width:720px;margin:0 auto 6px;font-size:12px;color:#d33;font-weight:700}.pe{margin-right:3px;font-weight:700}.peer{font-size:12px;font-weight:700;margin:0 0 6px}
+#dlg{display:none;position:fixed;inset:0;z-index:25;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:12px}#dlg.on{display:flex}
+#dlg .bx{background:var(--cd);color:var(--fg);border:1px solid var(--ln);border-radius:14px;padding:14px;width:100%;max-width:460px;max-height:90vh;overflow:auto}#dlg h3{margin:0 0 6px;font-size:16px}#dlg .opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px;line-height:1.5}#dlg .mu{color:var(--mu);font-size:12px}
+</style>
+</head>
+<body>
+<div class="top"><b>令和8年度 秋季関東歯科学生洋弓大会</b><span id="badge" class="mu"></span></div>
+<div class="stk">
+  <div class="seg" id="tabs">
+    <button data-tab="input">入力</button><button data-tab="board">集計</button><button data-tab="roster">名簿</button><button data-tab="sync">同期</button>
+  </div>
+  <div class="seg" id="comp"></div>
+</div>
+<main id="v"></main>
+<div id="dlg"></div>
+<div id="toast"></div>
+<div id="pad"></div>
+<div id="pick"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const EV={rookie:{label:"新人戦",T:15,R:["30m"],max:360},indiv:{label:"個人戦",T:15,R:["50m","30m"],max:720}};
+const COMP=[["rookie",0,"新人戦 30m"],["indiv",0,"個人戦 50m"],["indiv",1,"個人戦 30m"]];
+const KEYS=["X","10","9","8","7","6","5","4","3","2","1","M"];
+const FLD=["name","univ","grade","gender"];
+const VIEW=new URLSearchParams(location.search).has("view");
+const SK=VIEW?"arc-v4-view":"arc-v4",CK="arc-cfg",RK="arc-room",AK="arc-auto",OK="arc-ob",SYK="arc-sync-room",DK="arc-dname",IK="arc-cid";
+
+const mk=ev=>({name:"",univ:"",grade:"",gender:"",sc:EV[ev].R.map(()=>Array(36).fill(null)),locks:EV[ev].R.map(()=>Array(6).fill(false))});
+const init=()=>{const s={};for(const e in EV)s[e]=Array.from({length:EV[e].T*2},()=>mk(e));return s;};
+function load(){
+  try{
+    const d=JSON.parse(localStorage.getItem(SK));
+    if(!d||!Object.keys(EV).every(e=>Array.isArray(d[e])&&d[e].length>0&&d[e].length<=EV[e].T*2))return null;
+    for(const e in EV)while(d[e].length<EV[e].T*2)d[e].push(mk(e));
+    return d;
+  }catch(_){}return null;
+}
+const save=()=>{try{localStorage.setItem(SK,JSON.stringify(state));}catch(_){}};
+
+let state=load()||init();
+for(const ev in EV)state[ev].forEach(q=>q.locks=q.locks||EV[ev].R.map(()=>Array(6).fill(false)));
+let busy=false;
+const locked=(q,r,e)=>!!q.locks?.[r]?.[e];
+const activeEnd=(q,r)=>{const e=Array.from({length:6},(_,e)=>e).find(e=>!locked(q,r,e));return e??-1;};
+let ui={tab:VIEW?"board":"input",c:0,i:0,k:0,g:"all",pick:false,warn:false};
+let auto=localStorage.getItem(AK)!=="0";
+
+const cur=()=>({ev:COMP[ui.c][0],r:COMP[ui.c][1]});
+const val=v=>v==="X"?10:(v==null||v==="M")?0:+v;
+const rank=v=>v==="X"?11:v==null?-1:v==="M"?0:+v;
+const sum=a=>a.reduce((s,v)=>s+val(v),0);
+const ten=a=>a.filter(v=>v==="X"||v==="10").length;
+const pos=i=>`的${(i>>1)+1}${i&1?"B":"A"}`;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function stat(q){const a=q.sc.flat();return{t:sum(a),h:a.filter(v=>v!=null&&v!=="M").length,x:a.filter(v=>v==="X").length,t10:a.filter(v=>v==="10").length,n:a.filter(v=>v!=null).length};}
+function firstEmpty(){const{ev,r}=cur();const q=state[ev][ui.i],e=activeEnd(q,r);if(e<0)return 35;const j=q.sc[r].slice(e*6,e*6+6).findIndex(v=>v==null);return e*6+(j<0?5:j);}
+const info=q=>[q.univ,q.grade?q.grade+"年":"",q.gender].filter(Boolean).join(" ");
+
+/* ---------- sync (Firebase Realtime Database) ---------- */
+let db=null,online=false,live=false,room=localStorage.getItem(RK)||"kanto-2026-autumn";
+const syncOn=()=>{try{return!!JSON.parse(localStorage.getItem(CK)).databaseURL;}catch(_){return false;}};
+const ref=p=>db.ref("rooms/"+room+(p?"/"+p:""));
+const rp=(ev,i,f)=>`roster/${ev}/s${i}/${f}`;
+const norm=a=>a.filter(x=>x!=null).sort().join();
+
+/* 送信待ち(アウトボックス): 通信が悪くても入力・記録は端末内で先に確定し、送信は裏で再試行する */
+let ob=(()=>{try{const o=JSON.parse(localStorage.getItem(OK));if(o&&o.r&&o.e)return o;}catch(_){}return{r:{},e:{},room:""};})();
+if(VIEW)ob={r:{},e:{},room:""};
+const saveOb=()=>{if(!VIEW)try{localStorage.setItem(OK,JSON.stringify(ob));}catch(_){}};
+const obFor=()=>{if(ob.room!==room)ob={r:{},e:{},room};};
+const obReset=()=>{ob={r:{},e:{},room};saveOb();};
+let lastRemote=null,syncMsg="",sendFail=0;
+const LK="arc-lastsync"+(VIEW?"-v":"");
+let lastSync=+(localStorage.getItem(LK)||0);
+const markSync=()=>{lastSync=Date.now();try{localStorage.setItem(LK,lastSync);}catch(_){}};
+const hmSync=()=>lastSync?new Date(lastSync).toTimeString().slice(0,5):"";
+const pendN=()=>Object.keys(ob.r).length+Object.keys(ob.e).length;
+
+function toast(m){try{const c=$("#toast"),d=document.createElement("div");d.textContent=m;d.onclick=()=>d.remove();c.appendChild(d);setTimeout(()=>d.remove(),20000);}catch(_){}}
+function backup(){try{localStorage.setItem("arc-backup-"+Date.now(),JSON.stringify(state));Object.keys(localStorage).filter(x=>x.startsWith("arc-backup-")).sort().slice(0,-5).forEach(x=>localStorage.removeItem(x));}catch(_){}}
+function softRender(){if(!document.activeElement||!document.activeElement.matches("input,select,textarea"))render();}
+function localInfo(){let ros=0,ends=0;for(const ev in EV)state[ev].forEach(q=>{if(FLD.some(f=>q[f]))ros++;q.locks.forEach(l=>l.forEach(x=>{if(x)ends++;}));});return{ros,ends,n:ros+ends};}
+/* 端末にあって同期先にない項目を送信待ちに積む(同じ欄は同期先を優先) */
+function localDelta(v){
+  obFor();
+  for(const ev in EV)state[ev].forEach((q,i)=>{
+    const ro=v.roster?.[ev]?.["s"+i]||{};
+    FLD.forEach(f=>{if(q[f]&&!ro[f])ob.r[rp(ev,i,f)]=q[f];});
+    q.locks.forEach((l,r)=>l.forEach((x,e)=>{if(x&&!v.scores?.[ev]?.["s"+i]?.["r"+r]?.["end"+e]?.scores)ob.e[[ev,i,r,e].join("|")]=1;}));
+  });
+}
+
+function fromRemote(v){
+  const s=init();let lost=0;
+  for(const ev in EV)s[ev].forEach((q,i)=>{
+    const ro=v.roster?.[ev]?.["s"+i]||{},old=state?.[ev]?.[i];
+    FLD.forEach(f=>{const pth=rp(ev,i,f),rv=ro[f]||"";
+      if(pth in ob.r){if(ob.r[pth]===rv)delete ob.r[pth];else{q[f]=ob.r[pth];return;}}
+      q[f]=rv;});
+    const sc=v.scores?.[ev]?.["s"+i]||{};
+    EV[ev].R.forEach((_,r)=>{
+      const rr=sc["r"+r]||{};
+      for(let k=0;k<36;k++)q.sc[r][k]=rr["end"+Math.floor(k/6)]?.scores?.[k%6]??rr["a"+k]??null;
+      q.locks[r]=Array.from({length:6},(_,e)=>!!rr["end"+e]?.scores);
+      if(!old)return;
+      for(let e=0;e<6;e++){
+        const key=[ev,i,r,e].join("|"),mine=old.sc[r].slice(e*6,e*6+6),theirs=q.sc[r].slice(e*6,e*6+6);
+        const pend=key in ob.e,differs=norm(mine)!==norm(theirs);
+        if(q.locks[r][e]){
+          if(pend)delete ob.e[key];
+          if((pend||!locked(old,r,e))&&mine.some(x=>x!=null)&&differs)toast(`${EV[ev].label} ${old.name||pos(i)}（${EV[ev].R[r]}）第${e+1}フレーム：他の端末で先に記録されたため、この端末の入力内容が置き換わりました`);
+        }else if(pend&&locked(old,r,e)){
+          q.locks[r][e]=true;mine.forEach((x,j)=>q.sc[r][e*6+j]=x);
+        }else{
+          if(pend)delete ob.e[key];
+          if(!pend&&locked(old,r,e)&&!fresh(key))lost++;
+          if(!locked(old,r,e))mine.forEach((x,j)=>{if(x!=null)q.sc[r][e*6+j]=x;});
+        }
+      }
+    });
+  });
+  if(lost){backup();toast(`同期先から記録済みの${lost}フレーム分が消えていたため、この端末の表示も同期先に合わせました（消える前の内容はバックアップ保存済み）`);}
+  saveOb();return s;
+}
+
+/* 送信: 応答を待たずに裏で実行。失敗・未接続なら送信待ちのまま残り、復帰時/10秒ごとに再試行 */
+const inflight={};
+const fresh=k=>inflight[k]&&Date.now()-inflight[k]<60000;
+function flush(){
+  if(VIEW||!db||!live||!online)return;
+  obFor();
+  if(Object.keys(ob.r).length&&!fresh("r")){
+    const sent={...ob.r},ch={};for(const k in sent)ch[k]=sent[k]||null;
+    inflight.r=Date.now();
+    ref().update(ch).then(()=>{sendFail=0;for(const k in sent)if(ob.r[k]===sent[k])delete ob.r[k];saveOb();badge();}).catch(()=>{sendFail=Date.now();badge();}).finally(()=>{delete inflight.r;});
+  }
+  for(const key of Object.keys(ob.e)){
+    if(fresh(key))continue;
+    const[ev,i,r,e]=key.split("|"),I=+i,R=+r,E=+e,q=state[ev]?.[I];
+    if(!q||!locked(q,R,E)){delete ob.e[key];continue;}
+    const scores=q.sc[R].slice(E*6,E*6+6);if(scores.some(v=>v==null)){delete ob.e[key];continue;}
+    inflight[key]=Date.now();
+    ref(`scores/${ev}/s${I}/r${R}`).transaction(rr=>{rr=rr||{};if(rr["end"+E]?.scores)return rr;rr["end"+E]={scores};scores.forEach((v,j)=>rr["a"+(E*6+j)]=v);return rr;})
+      .then(res=>{
+        const rem=res.snapshot.val()?.["end"+E]?.scores;if(!res.committed||!rem)return;sendFail=0;
+        const cq=state[ev][I],mine=cq.sc[R].slice(E*6,E*6+6);
+        if(mine.join()!==rem.join()){rem.forEach((x,j)=>cq.sc[R][E*6+j]=x);toast(`${EV[ev].label} ${cq.name||pos(I)}（${EV[ev].R[R]}）第${E+1}フレーム：他の端末で先に記録されていたため、同期先の記録に合わせました`);}
+        cq.locks[R][E]=true;delete ob.e[key];saveOb();save();badge();softRender();
+      }).catch(()=>{sendFail=Date.now();badge();}).finally(()=>{delete inflight[key];});
+  }
+  saveOb();
+}
+
+/* 入力中の表示(他端末がどの選手のどのフレームを入力しているか) */
+const CID=localStorage.getItem(IK)||(()=>{const x=Math.random().toString(36).slice(2,6);try{localStorage.setItem(IK,x);}catch(_){}return x;})();
+let dname=localStorage.getItem(DK)||("端末"+CID.slice(0,2).toUpperCase()),others={},lastPres=null,serverOff=0;
+const col=id=>{let h=0;for(const c of id)h=(h*31+c.charCodeAt(0))%360;return`hsl(${h} 70% 42%)`;};
+const peers=()=>Object.entries(others).map(([id,o])=>({id,...o})).filter(p=>typeof p.t==="number"&&p.i!=null&&Date.now()+serverOff-p.t<120000);
+function presDesc(){if(VIEW||ui.tab!=="input"||ui.pick)return null;const{ev,r}=cur();return JSON.stringify({ev,i:ui.i,r,e:activeEnd(state[ev][ui.i],r)});}
+function sendPres(force){
+  if(VIEW||!db||!live||!online)return;
+  const d=presDesc();if(d===lastPres&&!force)return;lastPres=d;
+  const pr=ref("presence/"+CID);
+  if(d==null){pr.remove().catch(()=>{});return;}
+  const o=JSON.parse(d);o.n=dname;o.t=firebase.database.ServerValue.TIMESTAMP;pr.set(o).catch(()=>{});
+}
+function goLive(){if(!live||!online)return;flush();if(!VIEW){try{ref("presence/"+CID).onDisconnect().remove();}catch(_){}sendPres(true);}}
+
+function pendingOnly(){
+  const n=init();
+  for(const ev in EV)state[ev].forEach((q,i)=>{
+    FLD.forEach(f=>{const k=rp(ev,i,f);if(k in ob.r)n[ev][i][f]=ob.r[k];});
+    q.locks.forEach((l,r)=>l.forEach((x,e)=>{if(x&&([ev,i,r,e].join("|") in ob.e)){n[ev][i].locks[r][e]=true;for(let j=0;j<6;j++)n[ev][i].sc[r][e*6+j]=q.sc[r][e*6+j];}}));
+  });
+  return n;
+}
+function onFirst(v){
+  if(VIEW){state=v?fromRemote(v):init();save();return;}
+  const li=localInfo(),same=localStorage.getItem(SYK)===room;
+  obFor();
+  if(!v){
+    if(li.n){
+      if(same&&li.n>pendN()&&!confirm(`同期先のデータが空です（他の端末で全消去された可能性があります）。\n\n【OK】この端末のデータ（名簿${li.ros}名・記録済み${li.ends}フレーム）を同期先に復元する\n【キャンセル】この端末のデータも消去する（バックアップは保存されます）`)){backup();state=init();obReset();}
+      else localDelta({});
+    }
+  }else if(li.n&&!same){
+    backup();
+    if(confirm(`同期先にはすでにデータがあります。この端末にも未同期のデータ（名簿${li.ros}名・記録済み${li.ends}フレーム）があります。\n\n【OK】この端末のデータを同期先の空き欄に追加する（同じ欄は同期先を優先）\n【キャンセル】この端末のデータは使わず、同期先に合わせる（バックアップは保存されます）`))localDelta(v);
+    else{state=init();obReset();}
+  }
+  if(v)state=fromRemote(v);
+  save();saveOb();
+}
+const SDK="https://www.gstatic.com/firebasejs/10.12.2/";
+function loadSdk(){
+  const f=!window.firebase?"firebase-app-compat.js":!firebase.database?"firebase-database-compat.js":null;
+  if(!f){connect();return;}
+  const sc=document.createElement("script");sc.src=SDK+f;sc.onload=loadSdk;sc.onerror=()=>setTimeout(loadSdk,15000);document.head.appendChild(sc);
+}
+function connect(){
+  if(db)return;
+  let cfg;try{cfg=JSON.parse(localStorage.getItem(CK));}catch(_){}
+  if(!cfg||!cfg.databaseURL)return;
+  if(!window.firebase||!firebase.database){badge("⚪ 同期SDK読込待ち…（通信が戻ると自動で再試行）");loadSdk();return;}
+  try{if(!firebase.apps.length)firebase.initializeApp(cfg);db=firebase.database();}catch(e){badge("⚠ 同期設定エラー");return;}
+  badge("");obFor();saveOb();
+  db.ref(".info/serverTimeOffset").on("value",s=>{serverOff=s.val()||0;});
+  db.ref(".info/connected").on("value",s=>{const was=online;online=!!s.val();if(was&&!online&&live)markSync();if(online&&live)goLive();badge();softRender();});
+  let first=true,lastKey=null;
+  ref().on("value",snap=>{
+    syncMsg="";markSync();
+    const raw=snap.val();let v=null;
+    if(raw){v={};if(raw.roster)v.roster=raw.roster;if(raw.scores)v.scores=raw.scores;if(!Object.keys(v).length)v=null;}
+    const key=JSON.stringify(v);
+    if(!first&&key===lastKey)return;lastKey=key;lastRemote=v;
+    if(first)onFirst(v);
+    else if(!v){
+      if(pendN()&&confirm(`同期先のデータが全消去されました。この端末には未送信のデータが${pendN()}件あります。\n\n【OK】未送信分だけを同期先に送る（送信済みの分は復活しません）\n【キャンセル】未送信分も破棄する（バックアップは保存されます）`)){backup();state=pendingOnly();saveOb();}
+      else{if(localInfo().n){backup();toast("同期先のデータが全消去されたため、この端末のデータも消去しました（バックアップ保存済み）");}state=init();obReset();}
+      save();}
+    else{state=fromRemote(v);save();}
+    first=false;live=true;
+    try{localStorage.setItem(SYK,room);}catch(_){}
+    goLive();softRender();
+  },()=>{badge("⚠ 同期エラー（Firebaseのルール/URLを確認）");});
+  ref("presence").on("value",s=>{others=s.val()||{};delete others[CID];softRender();});
+  setInterval(flush,10000);setInterval(()=>{if(online&&live)markSync();if(lastPres)sendPres(true);},30000);
+  const nudge=()=>{if(!db)return;if(!online){try{db.goOffline();db.goOnline();}catch(_){}}flush();if(live&&online)sendPres(true);};
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")nudge();});
+  if(window.addEventListener)window.addEventListener("online",nudge);
+  badge();
+}
+function badge(m){
+  if(m!==undefined)syncMsg=m;
+  const n=pendN(),parts=[],hm=hmSync(),stale=syncOn()&&db&&!(online&&live);
+  if(n)parts.push(`未送信${n}件`);
+  if(stale&&hm)parts.push(`最終同期 ${hm}`);
+  const t=parts.length?`（${parts.join("・")}）`:"",fail=n&&sendFail&&Date.now()-sendFail<60000;
+  $("#badge").textContent=syncMsg||(!syncOn()?"⚪ この端末のみ":!db?"⚪ 未接続"+t:fail?"⚠ 送信エラー"+t:online&&live?"🟢 同期中"+t:online?"🟡 接続中…"+t:"🟡 オフライン"+t);
+}
+function parseCfg(t){
+  try{const o=JSON.parse(t);if(o.databaseURL)return o;}catch(_){}
+  const o={};t.replace(/(\w+)\s*:\s*["']([^"']*)["']/g,(m,k,v)=>o[k]=v);
+  return o.databaseURL?o:null;
+}
+function link(view){
+  const c=localStorage.getItem(CK);if(!c)return"";
+  return location.href.split("#")[0].split("?")[0]+(view?"?view=1":"")+"#c="+encodeURIComponent(btoa(c))+"&r="+encodeURIComponent(room);
+}
+(function(){
+  const h=new URLSearchParams(location.hash.slice(1));
+  if(h.get("c")){try{localStorage.setItem(CK,atob(h.get("c")));if(h.get("r"))localStorage.setItem(RK,h.get("r"));room=localStorage.getItem(RK)||room;}catch(_){}history.replaceState(null,"",location.pathname+location.search);}
+})();
+
+/* ---------- views ---------- */
+function vIn(){
+  const{ev,r}=cur(),q=state[ev][ui.i],a=q.sc[r],pe=peers().filter(p=>p.ev===ev&&p.i===ui.i&&p.r===r);let body="",cum=0;
+  for(let e=0;e<6;e++){
+    const seg=a.slice(e*6,e*6+6),any=seg.some(v=>v!=null),who=pe.filter(p=>p.e===e),pc=who.length?col(who[0].id):"",pend=[ev,ui.i,r,e].join("|") in ob.e;
+    for(let h=0;h<2;h++){
+      const part=seg.slice(h*3,h*3+3),ay=part.some(v=>v!=null);cum+=sum(part);
+      body+=`<tr>${h?"":`<td class="en" rowspan="2">${e+1}<small>${locked(q,r,e)?(pend?"送信待":"記録済"):"未確定"}</small>${who.length?`<small style="color:${pc}">✎</small>`:""}</td>`}`+
+        part.map((v,c)=>{const k=e*6+h*3+c;return `<td class="ac ${v!=null?"s-"+v:""}${locked(q,r,e)?" locked":k===ui.k?" cur":""}${who.length?" oth":""}" ${who.length?`style="--pc:${pc}" `:""}data-k="${k}">${v??""}</td>`;}).join("")+
+        `<td>${ay?sum(part):""}</td><td>${ay?cum:""}</td>`+
+        (h?"":`<td rowspan="2">${any?ten(seg):""}</td><td rowspan="2">${any?seg.filter(v=>v==="X").length:""}</td>`)+`</tr>`;
+    }
+  }
+  const has=a.some(v=>v!=null);
+  return `<div class="sel"><button data-act="prev">‹</button>
+    <button class="who" data-act="pick"><b>${EV[ev].label} ${pos(ui.i)}　${q.name?esc(q.name):"(未登録)"}</b><small>${esc(info(q))||"タップで選手を選ぶ"}</small></button>
+    <button data-act="nxt">›</button></div>
+    ${pe.map(p=>`<div class="peer" style="color:${col(p.id)}">✎ ${esc(p.n||"他の端末")} が${p.e>=0?`第${p.e+1}フレームを入力中`:"この選手を開いています"}</div>`).join("")}
+    <div class="sh"><span>${EV[ev].label}　${EV[ev].R[r]}　36射</span><span>${has?"総計 "+sum(a):""}</span></div>
+    <table class="st"><colgroup><col style="width:26px"><col><col><col><col style="width:36px"><col style="width:42px"><col style="width:38px"><col style="width:30px"></colgroup>
+    <thead><tr><th></th><th>1</th><th>2</th><th>3</th><th>小計</th><th>累計</th><th>10+X</th><th>X</th></tr></thead>
+    <tbody>${body}</tbody>
+    <tfoot><tr><td colspan="5" style="text-align:right;padding-right:8px">総計</td><td>${has?sum(a):""}</td><td>${has?ten(a):""}</td><td>${has?a.filter(v=>v==="X").length:""}</td></tr></tfoot></table>
+    <label class="mu" style="display:block;margin-top:8px"><input type="checkbox" data-act="auto" ${auto?"checked":""}> 3本そろったら高い順に並べ替える</label>`;
+}
+function vPad(){
+  const{ev,r}=cur(),q=state[ev][ui.i],e=activeEnd(q,r),n=e<0?0:q.sc[r].slice(e*6,e*6+6).filter(v=>v!=null).length;
+  const dis=busy||e<0||locked(q,r,Math.floor(ui.k/6)),pw=peers().filter(p=>p.ev===ev&&p.i===ui.i&&p.r===r&&p.e===e&&e>=0);
+  return `${pw.length?`<div class="peerw">⚠ ${pw.map(p=>esc(p.n||"他の端末")).join("・")} も同じフレームを入力中です。重複入力に注意してください</div>`:""}<div class="recordbar"><button data-act="record" class="${ui.warn&&n===6?'alert':''}" ${busy||n!==6?'disabled':''}>${busy?'記録中…':'6本を記録'}</button><span role="status">${e<0?'36射すべて記録済み':n===6?`<span class="warn">⚠ 6本入力済みです。上書きはできません。<br>照合して「6本を記録」を押してください（修正は「⌫ 1つ戻す」）</span>`:`第${e+1}フレーム ${n}/6本`}<br>記録後は変更できません</span></div><div class="keys">${KEYS.map(k=>`<button class="s-${k}" data-key="${k}" ${dis?'disabled':''}>${k}</button>`).join("")}
+    <button class="w" data-act="back" ${dis?'disabled':''}>⌫ 1つ戻す</button><button class="w" data-act="nextp" ${busy?'disabled':''}>次の選手 ›</button></div>`;
+}
+function vPick(){
+  const{ev,r}=cur();
+  let h=`<div class="mh"><b>${EV[ev].label} 立ち位置</b><button data-act="closepick">閉じる</button></div><div class="mg">`;
+  for(let t=0;t<EV[ev].T;t++)h+=`<div class="tc"><b>${t+1}</b>`+[0,1].map(k=>{
+    const i=t*2+k,q=state[ev][i],n=q.sc[r].filter(v=>v!=null).length,pp=peers().filter(x=>x.ev===ev&&x.r===r&&x.i===i);
+    return `<button class="${i===ui.i?"sel2 ":""}${n===36?"done":n?"part":""}" data-i="${i}"><i>${k?"B":"A"}</i>${pp.length?`<span class="pe" style="color:${col(pp[0].id)}" title="${esc(pp.map(x=>x.n).join("・"))}">✎</span>`:""}${q.name?esc(q.name):"(未登録)"}</button>`;
+  }).join("")+`</div>`;
+  return h+"</div>";
+}
+function vBd(){
+  const{ev}=cur(),cmp=(a,b)=>b.t-a.t||b.h-a.h||b.x-a.x||b.t10-a.t10;
+  const rows=state[ev].map((q,i)=>({i,q,...stat(q)})).filter(o=>(o.q.name||o.n)&&(ui.g==="all"||o.q.gender===ui.g));
+  const sh=rows.filter(o=>o.n).sort(cmp),rk=new Map();
+  sh.forEach((o,k)=>{const p=sh[k-1];rk.set(o.i,p&&!cmp(p,o)?rk.get(p.i):k+1);});
+  const list=sh.concat(rows.filter(o=>!o.n));
+  const opt=(v,l)=>`<option value="${v}"${ui.g===v?" selected":""}>${l}</option>`;
+  const stale=syncOn()&&!(db&&online&&live);
+  return (stale?`<div class="card" style="border-color:#d33;color:#d33;font-weight:700">⚠ 同期が切れています。表示は${hmSync()?hmSync()+" 時点の":"この端末に保存された"}内容です。</div>`:"")+`<div class="card"><div class="row" style="margin:0"><b>${EV[ev].label}</b>
+    <select data-act="g" style="margin-left:auto">${opt("all","男女すべて")}${opt("男","男子")}${opt("女","女子")}</select>
+    <button data-act="csv">CSV</button></div>
+    <div class="mu" style="margin-top:6px">同点は ヒット数 → X → 10の数 の順。それでも同じなら同順位。</div></div>`+
+  list.map(o=>`<div class="card bc"><div class="rk">${rk.get(o.i)??"-"}</div>
+    <div class="bi"><b>${esc(o.q.name)||"(未登録)"}</b><span class="mu">${esc(info(o.q))} ${pos(o.i)}</span><br>
+    <span class="mu">${EV[ev].R.map((d,r)=>d+" "+sum(o.q.sc[r])).join(" / ")}　X ${o.x}　10 ${o.t10}　Hit ${o.h}</span></div>
+    <div class="bt">${o.n?o.t:""}<small>/${EV[ev].max}</small></div></div>`).join("");
+}
+function vRo(){
+  const{ev}=cur();
+  let h=`<div class="card"><b>${EV[ev].label} 立ち位置・名簿</b> <span class="mu">登録 ${state[ev].filter(q=>q.name).length}名</span></div>`;
+  for(let t=0;t<EV[ev].T;t++){
+    h+=`<div class="card"><div class="tn">的${t+1}</div>`;
+    for(let k=0;k<2;k++){
+      const i=t*2+k,q=state[ev][i];
+      h+=`<div class="rr"><span class="ab">${k?"B":"A"}</span>
+        <input class="f1" data-i="${i}" data-f="name" placeholder="選手氏名" value="${esc(q.name)}">
+        <input class="f2" data-i="${i}" data-f="univ" placeholder="大学名" value="${esc(q.univ)}">
+        <input class="f3" data-i="${i}" data-f="grade" placeholder="学年" inputmode="numeric" value="${esc(q.grade)}">
+        <select class="f4" data-i="${i}" data-f="gender"><option value=""></option><option${q.gender==="男"?" selected":""}>男</option><option${q.gender==="女"?" selected":""}>女</option></select></div>`;
+    }
+    h+="</div>";
+  }
+  return h;
+}
+function vSy(){
+  const c=localStorage.getItem(CK)||"";
+  return `<div class="card"><b>リアルタイム同期</b> <span class="mu">${$("#badge").textContent}</span>
+    <ol class="mu" style="font-size:13px">
+    <li>Firebaseコンソール(無料)でプロジェクトを作成</li>
+    <li>「Realtime Database」を作成(ルールは .read / .write を true に。大会後は削除推奨)</li>
+    <li>プロジェクト設定 → ウェブアプリを追加 → 表示される firebaseConfig を下に貼り付け</li>
+    <li>「接続」後、下のリンクを入力係・閲覧用に共有(設定入り)</li></ol>
+    <textarea id="cfg" placeholder='firebaseConfig を貼り付け'>${esc(c)}</textarea>
+    <div class="row"><input class="in" id="room" value="${esc(room)}" style="flex:1" placeholder="大会ID"><button class="on" data-act="connect">接続</button></div>
+    <div class="row"><span class="mu">この端末の名前</span><input class="in" data-dn value="${esc(dname)}" maxlength="12" style="flex:1" placeholder="例: 受付A"></div>
+    <div class="mu" style="margin-top:6px">未送信: ${pendN()}件（電波が戻ると自動で送信します）</div>
+    <div class="row"><button data-act="link">入力用リンクをコピー</button><button data-act="linkv">閲覧専用リンクをコピー</button><button data-act="disc">切断</button><button data-act="export">端末データをJSON保存</button><button data-act="import">JSONを読み込む</button><input type="file" id="impf" data-act="impfile" accept=".json,application/json" hidden></div>
+    <div class="mu" style="margin-top:8px">複数端末で使うには、このHTMLをWeb上(GitHub Pages / Netlify など)に置いてください。</div></div>
+    <div class="card"><button data-act="reset" style="color:#d33">全データ消去</button></div>`;
+}
+
+function render(){
+  document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("on",b.dataset.tab===ui.tab));
+  $("#tabs").style.display=VIEW?"none":"";
+  $("#comp").style.display=ui.tab==="sync"?"none":"";
+  $("#comp").innerHTML=COMP.map((c,i)=>`<button data-c="${i}" class="${i===ui.c?"on":""}">${c[2]}</button>`).join("");
+  $("#v").innerHTML=({input:vIn,board:vBd,roster:vRo,sync:vSy})[ui.tab]();
+  if(ui.tab==="input"){const{ev,r}=cur(),en=activeEnd(state[ev][ui.i],r);if(en>=0&&Math.floor(ui.k/6)!==en)ui.k=firstEmpty();}
+  document.body.classList.toggle("hp",ui.tab==="input");
+  $("#pad").innerHTML=ui.tab==="input"?vPad():"";
+  $("#pick").className=ui.pick?"on":"";$("#pick").innerHTML=ui.pick?vPick():"";
+  badge();sendPres();
+  if(ui.tab==="input"&&!ui.pick){const c=document.querySelector(".ac.cur");if(c)c.scrollIntoView({block:"nearest"});}
+}
+function move(d){
+  const L=state[cur().ev];let j=ui.i;
+  for(let n=0;n<L.length;n++){j=(j+d+L.length)%L.length;if(L[j].name)break;}
+  ui.i=j;ui.k=firstEmpty();
+}
+function setArrow(key){
+  const{ev,r}=cur(),q=state[ev][ui.i],a=q.sc[r],k=ui.k,e=activeEnd(q,r);
+  if(busy||e<0||Math.floor(k/6)!==e||locked(q,r,e)||!KEYS.includes(key))return;
+  if(a.slice(e*6,e*6+6).every(v=>v!=null)){ui.warn=true;try{navigator.vibrate&&navigator.vibrate(80);}catch(_){}return;}
+  a[k]=key;
+  if(auto){const s=Math.floor(k/3)*3,seg=a.slice(s,s+3);if(seg.every(v=>v!=null)){seg.sort((x,y)=>rank(y)-rank(x));seg.forEach((v,j)=>a[s+j]=v);}}
+  const nx=a.findIndex((v,j)=>v==null&&j>=e*6&&j<e*6+6);ui.k=nx>=0?nx:e*6+5;save();
+}
+function recordEnds(all=false){
+  const{ev,r}=cur(),i=ui.i,q=state[ev][i],active=activeEnd(q,r),ends=[];
+  for(let e=0;e<6;e++){if(locked(q,r,e)||(!all&&e!==active))continue;const a=q.sc[r].slice(e*6,e*6+6),n=a.filter(v=>v!=null).length;
+    if(!n)continue;if(n!==6){alert(`第${e+1}フレームは${n}/6本です。6本を入力してから記録・移動してください。`);return false;}ends.push(e);}
+  if(!ends.length)return true;
+  obFor();
+  ends.forEach(e=>{q.locks[r][e]=true;if(syncOn()&&!VIEW)ob.e[[ev,i,r,e].join("|")]=1;});
+  saveOb();save();ui.k=firstEmpty();flush();
+  return true;
+}
+function bkList(){
+  try{return Object.keys(localStorage).filter(k=>k.startsWith("arc-backup-")).sort().reverse().map(k=>{
+    let ros=0,ends=0,ok=true;
+    try{const d=JSON.parse(localStorage.getItem(k)),st=d&&d.state?d.state:d;
+      for(const ev in EV)(st[ev]||[]).slice(0,EV[ev].T*2).forEach(q=>{if(!q)return;if(FLD.some(f=>typeof q[f]==="string"&&q[f]))ros++;(q.locks||[]).forEach(l=>(l||[]).forEach(x=>{if(x===true)ends++;}));});
+    }catch(_){ok=false;}
+    const ts=+k.slice(11);return{k,ros,ends,ok,t:ts?new Date(ts).toLocaleString("ja-JP"):k};});}catch(_){return[];}
+}
+function closeDlg(){const d=$("#dlg");d.classList.toggle("on",false);d.innerHTML="";}
+function openImport(){
+  const L=bkList();
+  $("#dlg").innerHTML=`<div class="bx"><h3>JSONを読み込む</h3><div class="mu">どこから読み込みますか？</div>
+    <button class="opt" data-act="impfilebtn">PC・端末内のJSONファイルを選ぶ<br><span class="mu">「端末データをJSON保存」で書き出したファイルなど</span></button>
+    <div style="margin-top:12px;font-weight:700">ブラウザ内の自動バックアップ</div>
+    ${L.length?L.map(b=>`<button class="opt" data-act="impbk" data-bk="${esc(b.k)}"${b.ok?"":" disabled"}>${esc(b.t)}<br><span class="mu">${b.ok?`名簿${b.ros}名・記録済み${b.ends}フレーム`:"読み込めないバックアップです"}</span></button>`).join(""):'<div class="mu" style="margin:6px 0">自動バックアップはありません。</div>'}
+    ${L.length?'<button class="opt" data-act="impdl">最新のバックアップをJSONファイルとして保存</button>':""}
+    <div class="row" style="margin-top:10px"><button data-act="impclose">キャンセル</button></div></div>`;
+  $("#dlg").classList.toggle("on",true);
+}
+function importData(text){
+  let d;try{d=JSON.parse(text);}catch(_){alert("JSONとして読み込めませんでした。ファイルを確認してください。");return;}
+  const src=d&&d.state?d.state:d,n=init();
+  if(!src||typeof src!=="object"||!Object.keys(EV).every(e=>Array.isArray(src[e]))){alert("このアプリで書き出したデータではありません。");return;}
+  let ros=0,ends=0;
+  for(const ev in EV)src[ev].slice(0,EV[ev].T*2).forEach((q,i)=>{
+    if(!q||typeof q!=="object")return;const t=n[ev][i];
+    FLD.forEach(f=>{t[f]=typeof q[f]==="string"?q[f].slice(0,60):"";});if(FLD.some(f=>t[f]))ros++;
+    EV[ev].R.forEach((_,r)=>{
+      const a=Array.isArray(q.sc?.[r])?q.sc[r]:[];
+      for(let k=0;k<36;k++)t.sc[r][k]=KEYS.includes(a[k])?a[k]:null;
+      for(let e=0;e<6;e++)if(q.locks?.[r]?.[e]===true&&t.sc[r].slice(e*6,e*6+6).every(v=>v!=null)){t.locks[r][e]=true;ends++;}
+    });
+  });
+  if(!ros&&!ends){alert("読み込めるデータ（名簿・記録）が含まれていません。");return;}
+  if(!confirm(`名簿${ros}名・記録済み${ends}フレームを読み込みます。\n\nこの端末の現在のデータは置き換わります（置き換え前のデータはバックアップとして保存されます）。${syncOn()?"\n同期中の場合、同期先と重なる欄は同期先の内容を優先し、空き欄だけを追加します。":""}\n\nよろしいですか？`))return;
+  backup();state=n;obFor();ob={r:{},e:{},room};
+  if(syncOn()&&!VIEW){localDelta(lastRemote||{});if(lastRemote)state=fromRemote(lastRemote);saveOb();}
+  save();ui.i=0;ui.k=firstEmpty();flush();render();
+  alert(`読み込みました（名簿${ros}名・記録済み${ends}フレーム）。`);
+}
+function dl(n,t,m){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([t],{type:m||"text/csv"}));a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+async function copy(t){try{await navigator.clipboard.writeText(t);alert("コピーしました");}catch(_){prompt("コピーしてください",t);}}
+
+document.addEventListener("click",async e=>{
+  const t=e.target.closest("[data-tab],[data-c],button[data-i],td[data-k],[data-key],button[data-act]");if(!t)return;
+  const d=t.dataset,{ev,r}=cur();if(busy||t.disabled)return;
+  if(d.tab||d.c!=null||t.matches("button[data-i]")){const q=state[ev][ui.i];if(q.sc[r].some((v,k)=>v!=null&&!locked(q,r,Math.floor(k/6)))){alert('未確定の得点があります。6本を照合して「6本を記録」を押してから移動してください。');return;}}
+  ui.warn=false;
+  if(d.tab)ui.tab=d.tab;
+  else if(d.c!=null){ui.c=+d.c;ui.i=Math.min(ui.i,state[cur().ev].length-1);ui.k=firstEmpty();}
+  else if(t.matches("button[data-i]")){ui.i=+d.i;ui.k=firstEmpty();ui.pick=false;}
+  else if(d.k!=null){const q=state[ev][ui.i],e=Math.floor(+d.k/6);if(locked(q,r,e)){alert("記録済みの得点は変更できません。");return;}if(e!==activeEnd(q,r)){alert("現在のフレームを6本入力して記録してください。");return;}ui.k=+d.k;}
+  else if(d.key)setArrow(d.key);
+  else switch(d.act){
+    case"record":await recordEnds();break;
+    case"back":{const q=state[ev][ui.i],a=q.sc[r],en=activeEnd(q,r);if(en<0)break;let k=ui.k;if(a[k]==null&&k>en*6)k--;if(Math.floor(k/6)!==en||locked(q,r,en))break;ui.k=k;a[k]=null;save();break;}
+    case"nextp":case"nxt":if(await recordEnds(true))move(1);break;
+    case"prev":if(await recordEnds(true))move(-1);break;
+    case"pick":ui.pick=true;break;
+    case"closepick":ui.pick=false;break;
+    case"auto":return;
+    case"g":return;
+    case"csv":{
+      const L=[["順位","立ち位置","氏名","大学名","学年","性別",...EV[ev].R,"総計","ヒット","X","10"]];
+      const all=state[ev].map((q,i)=>({i,...stat(q)})).filter(o=>o.n).sort((a,b)=>b.t-a.t||b.h-a.h||b.x-a.x||b.t10-a.t10),crk=new Map();
+      all.forEach((o,k)=>{const p=all[k-1];crk.set(o.i,p&&p.t===o.t&&p.h===o.h&&p.x===o.x&&p.t10===o.t10?crk.get(p.i):k+1);});
+      state[ev].forEach((q,i)=>{const s=stat(q);if(q.name||s.n)L.push([crk.get(i)??"",pos(i),q.name,q.univ,q.grade,q.gender,...EV[ev].R.map((_,k)=>sum(q.sc[k])),s.t,s.h,s.x,s.t10]);});
+      dl(`archery-${ev}.csv`,"\ufeff"+L.map(x=>x.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\r\n"));return;}
+    case"connect":{
+      const c=parseCfg($("#cfg").value);if(!c){alert("databaseURL を含む firebaseConfig を貼り付けてください");return;}
+      localStorage.setItem(CK,JSON.stringify(c));localStorage.setItem(RK,($("#room").value.trim()||"kanto-2026-autumn").replace(/[.#$\[\]\/]/g,"-"));location.reload();return;}
+    case"disc":localStorage.removeItem(CK);location.reload();return;
+    case"link":copy(link(false));return;
+    case"linkv":copy(link(true));return;
+    case"reset":if(confirm("全員のスコアと名簿を消去します(同期中は共有データも消えます)。よろしいですか?")){
+      if(syncOn()&&!(db&&live&&online)){alert("同期先に接続できていないため消去できません（他の端末にデータが残ってしまうため）。接続を確認してください。");break;}
+      backup();if(db&&live)ref().update({roster:null,scores:null});state=init();obReset();save();}break;
+    case"export":dl("archery-backup.json",JSON.stringify({state,outbox:ob}),"application/json");return;
+    case"import":if(ui.tab==="sync")openImport();return;
+    case"impfilebtn":{closeDlg();const f=$("#impf");if(f)f.click();return;}
+    case"impbk":{const txt=localStorage.getItem(d.bk);closeDlg();if(txt==null){alert("バックアップを読み込めませんでした。");return;}importData(txt);return;}
+    case"impdl":{const L=bkList();closeDlg();if(L.length)dl("recovered-backup.json",localStorage.getItem(L[0].k),"application/json");return;}
+    case"impclose":closeDlg();return;
+  }
+  render();
+});
+document.addEventListener("change",async e=>{
+  const t=e.target,d=t.dataset;
+  if(d.act==="impfile"){const f=t.files&&t.files[0];if(!f)return;let txt;try{txt=await(f.text?f.text():new Promise((ok,ng)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=ng;r.readAsText(f);}));}catch(_){alert("ファイルを読み込めませんでした。");return;}try{t.value="";}catch(_){}importData(txt);return;}
+  if(d.act==="auto"){auto=t.checked;localStorage.setItem(AK,auto?"1":"0");return;}
+  if(d.act==="g"){ui.g=t.value;render();return;}
+  if("dn" in d){dname=t.value.trim().slice(0,12)||dname;try{localStorage.setItem(DK,dname);}catch(_){}sendPres(true);return;}
+  if(d.f){const{ev}=cur();state[ev][+d.i][d.f]=t.value;save();if(syncOn()&&!VIEW){obFor();ob.r[rp(ev,+d.i,d.f)]=t.value;saveOb();flush();badge();}}
+});
+
+render();
+connect();
+</script>
+</body>
+</html>
