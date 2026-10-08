@@ -174,6 +174,7 @@ function fromRemote(v){
         if(q.locks[r][e]){
           if(pend)delete ob.e[key];
           if((pend||!locked(old,r,e))&&mine.some(x=>x!=null)&&differs)toast(`${EV[ev].label} ${old.name||pos(i)}（${EV[ev].R[r]}）第${e+1}フレーム：他の端末で先に記録されたため、この端末の入力内容が置き換わりました`);
+          else if(!pend&&locked(old,r,e)&&differs)toast(`${EV[ev].label} ${old.name||pos(i)}（${EV[ev].R[r]}）第${e+1}フレーム：記録が訂正されました（${mine.join(" ")} → ${theirs.join(" ")}）`);
         }else if(pend&&locked(old,r,e)){
           q.locks[r][e]=true;mine.forEach((x,j)=>q.sc[r][e*6+j]=x);
         }else{
