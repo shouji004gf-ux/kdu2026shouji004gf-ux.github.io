@@ -50,7 +50,7 @@ button:disabled{opacity:.45;cursor:not-allowed}.st td.locked{box-shadow:inset 0 
 .bc{display:flex;gap:10px;align-items:center}
 .rk{width:30px;font-size:20px;font-weight:700;text-align:center}
 .bi{flex:1;min-width:0}.bi b{display:block}
-.bt{font-size:26px;font-weight:700;text-align:right}.bt small{font-size:11px;color:var(--mu);font-weight:400}
+.dl{font-size:12px;font-weight:600;color:var(--ac)}.dl small{font-size:10px;font-weight:400}.bt{font-size:26px;font-weight:700;text-align:right}.bt small{font-size:11px;color:var(--mu);font-weight:400}
 .rr{display:grid;grid-template-columns:26px 1fr 54px 62px;gap:4px;margin-top:6px}
 .rr .ab{grid-row:1/3;align-self:center;font-weight:700}
 .rr input,.rr select,textarea,.in{width:100%;min-width:0;padding:8px;border:1px solid var(--ln);border-radius:8px;background:var(--bg);font-size:16px}
@@ -118,6 +118,7 @@ const ten=a=>a.filter(v=>v==="X"||v==="10").length;
 const pos=i=>`的${(i>>1)+1}${i&1?"B":"A"}`;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function stat(q){const a=q.sc.flat();return{t:sum(a),h:a.filter(v=>v!=null&&v!=="M").length,x:a.filter(v=>v==="X").length,t10:a.filter(v=>v==="10").length,n:a.filter(v=>v!=null).length};}
+function statR(q,r){const a=q.sc[r];return{t:sum(a),h:a.filter(v=>v!=null&&v!=="M").length,x:a.filter(v=>v==="X").length,t10:a.filter(v=>v==="10").length,n:a.filter(v=>v!=null).length};}
 function firstEmpty(){const{ev,r}=cur();const q=state[ev][ui.i],e=activeEnd(q,r);if(e<0)return 35;const j=q.sc[r].slice(e*6,e*6+6).findIndex(v=>v==null);return e*6+(j<0?5:j);}
 const info=q=>[q.univ,q.grade?q.grade+"年":"",q.gender].filter(Boolean).join(" ");
 
@@ -174,6 +175,7 @@ function fromRemote(v){
         if(q.locks[r][e]){
           if(pend)delete ob.e[key];
           if((pend||!locked(old,r,e))&&mine.some(x=>x!=null)&&differs)toast(`${EV[ev].label} ${old.name||pos(i)}（${EV[ev].R[r]}）第${e+1}フレーム：他の端末で先に記録されたため、この端末の入力内容が置き換わりました`);
+          if(pend&&mine.some(x=>x!=null)&&differs)queueSheet(ev,i,r);
           else if(!pend&&locked(old,r,e)&&differs)toast(`${EV[ev].label} ${old.name||pos(i)}（${EV[ev].R[r]}）第${e+1}フレーム：記録が訂正されました（${mine.join(" ")} → ${theirs.join(" ")}）`);
         }else if(pend&&locked(old,r,e)){
           q.locks[r][e]=true;mine.forEach((x,j)=>q.sc[r][e*6+j]=x);
@@ -211,7 +213,7 @@ function flush(){
         const rem=res.snapshot.val()?.["end"+E]?.scores;if(!res.committed||!rem)return;sendFail=0;
         const cq=state[ev][I],mine=cq.sc[R].slice(E*6,E*6+6);
         if(mine.join()!==rem.join()){rem.forEach((x,j)=>cq.sc[R][E*6+j]=x);toast(`${EV[ev].label} ${cq.name||pos(I)}（${EV[ev].R[R]}）第${E+1}フレーム：他の端末で先に記録されていたため、同期先の記録に合わせました`);}
-        cq.locks[R][E]=true;delete ob.e[key];saveOb();save();badge();softRender();
+        cq.locks[R][E]=true;delete ob.e[key];saveOb();save();queueSheet(ev,I,R);badge();softRender();
       }).catch(()=>{sendFail=Date.now();badge();}).finally(()=>{delete inflight[key];});
   }
   saveOb();
@@ -302,20 +304,94 @@ function badge(m){
   if(n)parts.push(`未送信${n}件`);
   if(stale&&hm)parts.push(`最終同期 ${hm}`);
   const t=parts.length?`（${parts.join("・")}）`:"",fail=n&&sendFail&&Date.now()-sendFail<60000;
-  $("#badge").textContent=syncMsg||(!syncOn()?"⚪ この端末のみ":!db?"⚪ 未接続"+t:fail?"⚠ 送信エラー"+t:online&&live?"🟢 同期中"+t:online?"🟡 接続中…"+t:"🟡 オフライン"+t);
+  const sh=sheetOn()&&sq.size?` ・シート未送信${sq.size}件`:"";
+  $("#badge").textContent=(syncMsg||(!syncOn()?"⚪ この端末のみ":!db?"⚪ 未接続"+t:fail?"⚠ 送信エラー"+t:online&&live?"🟢 同期中"+t:online?"🟡 接続中…"+t:"🟡 オフライン"+t))+sh;
 }
 function parseCfg(t){
   try{const o=JSON.parse(t);if(o.databaseURL)return o;}catch(_){}
   const o={};t.replace(/(\w+)\s*:\s*["']([^"']*)["']/g,(m,k,v)=>o[k]=v);
   return o.databaseURL?o:null;
 }
+/* ---------- Google Sheets (Apps Script Web App) ---------- */
+/* 送るのは「記録済みフレーム」と名簿だけ。入力途中の得点は他端末と共有されない仕様のため、シートにも載せない。
+   GASとの通信形式(行のキー・列・pull=1)は従来のまま。通信が悪いときは未送信の行を端末に残して自動で再送する。 */
+let SU=localStorage.getItem("arc-sheet")||"";
+const SQK="arc-sheetq";
+let sq=new Set((()=>{try{return JSON.parse(localStorage.getItem(SQK))||[];}catch(_){return[];}})()),stm=null,sheetBusy=false;
+const sheetOn=()=>!!SU&&!VIEW;
+const saveSq=()=>{try{localStorage.setItem(SQK,JSON.stringify([...sq]));}catch(_){}};
+const compIdx=(ev,r)=>COMP.findIndex(c=>c[0]===ev&&c[1]===r);
+function rowOf(ev,i,r){
+  const q=state[ev][i];
+  return{key:"C"+compIdx(ev,r)+"-"+String(i).padStart(2,"0"),ev:EV[ev].label,dist:EV[ev].R[r],t:(i>>1)+1,pos:i&1?"B":"A",
+    name:q.name,univ:q.univ,grade:q.grade,gender:q.gender,
+    arrows:q.sc[r].map((v,k)=>v!=null&&locked(q,r,Math.floor(k/6))?v:"")};
+}
+function queueSheet(ev,i,r){            // r を省略すると、その選手の全ラウンド
+  if(!sheetOn())return;
+  (r==null?EV[ev].R.map((_,x)=>x):[r]).forEach(x=>sq.add(ev+"|"+i+"|"+x));
+  saveSq();badge();clearTimeout(stm);stm=setTimeout(flushSheet,1200);
+}
+function sheetAll(){
+  if(!sheetOn())return;
+  for(const ev in EV)state[ev].forEach((q,i)=>EV[ev].R.forEach((_,r)=>{if(q.name||q.sc[r].some((v,k)=>v!=null&&locked(q,r,Math.floor(k/6))))sq.add(ev+"|"+i+"|"+r);}));
+  saveSq();badge();flushSheet();
+}
+function flushSheet(){
+  if(!sheetOn()||!sq.size||sheetBusy)return;
+  const keys=[...sq],rows=keys.map(k=>{const[a,b,c]=k.split("|");return state[a]&&state[a][+b]?rowOf(a,+b,+c):null;}).filter(Boolean);
+  if(!rows.length){sq.clear();saveSq();badge();return;}
+  sheetBusy=true;
+  const ac=typeof AbortController!=="undefined"?new AbortController():null,tm=setTimeout(()=>{try{ac&&ac.abort();}catch(_){}},20000);
+  fetch(SU,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({rows}),signal:ac?ac.signal:undefined})
+    .then(()=>{keys.forEach(k=>sq.delete(k));saveSq();})
+    .catch(()=>{})
+    .finally(()=>{clearTimeout(tm);sheetBusy=false;badge();});
+}
+/* シートから読み込む: 追加のみ。この端末・同期先にすでにある内容は変更しない */
+const sheetVal=v=>{const t=String(v==null?"":v).trim().toUpperCase();return KEYS.includes(t)?t:null;};
+function sheetPlan(rows){
+  const plan={items:[],skip:0,ros:0,ends:0};
+  (rows||[]).forEach(o=>{
+    const m=/^C(\d+)-(\d+)$/.exec((o&&o.key)||"");if(!m)return;
+    const c=COMP[+m[1]];if(!c)return;
+    const ev=c[0],r=c[1],i=+m[2],q=state[ev]&&state[ev][i];if(!q)return;
+    FLD.forEach(f=>{const v=o[f]==null?"":String(o[f]).trim();if(v&&!q[f])plan.items.push({t:"r",ev,i,f,v});});
+    const arr=Array.isArray(o.arrows)?o.arrows:[];
+    for(let e=0;e<6;e++){
+      if(locked(q,r,e))continue;
+      const a=arr.slice(e*6,e*6+6).map(sheetVal);
+      if(a.length<6||a.some(x=>x==null))continue;                      // 6本そろったフレームだけ
+      if(q.sc[r].slice(e*6,e*6+6).some(x=>x!=null)){plan.skip++;continue;}   // 端末側に入力があれば触らない
+      plan.items.push({t:"e",ev,i,r,e,a});
+    }
+  });
+  plan.ros=plan.items.filter(x=>x.t==="r").length;plan.ends=plan.items.filter(x=>x.t==="e").length;
+  return plan;
+}
+async function pullSheet(){
+  if(!SU){alert("先にURLを保存してください");return;}
+  let j;
+  try{
+    const ac=typeof AbortController!=="undefined"?new AbortController():null,tm=setTimeout(()=>{try{ac&&ac.abort();}catch(_){}},20000);
+    j=await(await fetch(SU+(SU.includes("?")?"&":"?")+"pull=1",{signal:ac?ac.signal:undefined})).json();clearTimeout(tm);
+  }catch(e){alert("シートから読み込めませんでした: "+e.message);return;}
+  const plan=sheetPlan(j&&j.rows);
+  if(!plan.items.length){alert("追加できる内容はありませんでした。"+(plan.skip?`（端末に入力がある${plan.skip}フレームは対象外です）`:"（すべて取り込み済みです）"));return;}
+  if(!confirm(`シートから読み込みます。\n\n名簿の空欄 ${plan.ros}項目、記録済みフレーム ${plan.ends}件を追加します。\nこの端末・同期先にすでにある内容は変更しません。${plan.skip?`\n（端末に入力がある${plan.skip}フレームは追加しません）`:""}\n\nよろしいですか？`))return;
+  backup();
+  plan.items.forEach(x=>{const q=state[x.ev][x.i];if(x.t==="r")q[x.f]=x.v;else{x.a.forEach((v,k)=>q.sc[x.r][x.e*6+k]=v);q.locks[x.r][x.e]=true;}});
+  if(syncOn()&&!VIEW){localDelta(lastRemote||{});if(lastRemote)state=fromRemote(lastRemote);saveOb();}
+  save();ui.k=firstEmpty();flush();render();
+  alert(`シートから読み込みました（名簿${plan.ros}項目・記録済み${plan.ends}フレーム）。`);
+}
 function link(view){
-  const c=localStorage.getItem(CK);if(!c)return"";
-  return location.href.split("#")[0].split("?")[0]+(view?"?view=1":"")+"#c="+encodeURIComponent(btoa(c))+"&r="+encodeURIComponent(room);
+  const c=localStorage.getItem(CK);if(!c&&!(SU&&!view))return"";
+  return location.href.split("#")[0].split("?")[0]+(view?"?view=1":"")+"#c="+(c?encodeURIComponent(btoa(c)):"")+"&r="+encodeURIComponent(room)+(!view&&SU?"&s="+encodeURIComponent(SU):"");
 }
 (function(){
   const h=new URLSearchParams(location.hash.slice(1));
-  if(h.get("c")){try{localStorage.setItem(CK,atob(h.get("c")));if(h.get("r"))localStorage.setItem(RK,h.get("r"));room=localStorage.getItem(RK)||room;}catch(_){}history.replaceState(null,"",location.pathname+location.search);}
+  if(h.get("c")||h.get("s")){try{if(h.get("c"))localStorage.setItem(CK,atob(h.get("c")));if(h.get("s")){localStorage.setItem("arc-sheet",h.get("s"));SU=h.get("s");}if(h.get("r"))localStorage.setItem(RK,h.get("r"));room=localStorage.getItem(RK)||room;}catch(_){}history.replaceState(null,"",location.pathname+location.search);}
 })();
 
 /* ---------- views ---------- */
@@ -359,21 +435,23 @@ function vPick(){
   return h+"</div>";
 }
 function vBd(){
-  const{ev}=cur(),cmp=(a,b)=>b.t-a.t||b.h-a.h||b.x-a.x||b.t10-a.t10;
+  const{ev,r}=cur(),R=EV[ev].R,two=R.length>1,cmp=(a,b)=>b.t-a.t||b.h-a.h||b.x-a.x||b.t10-a.t10;
   const rows=state[ev].map((q,i)=>({i,q,...stat(q)})).filter(o=>(o.q.name||o.n)&&(ui.g==="all"||o.q.gender===ui.g));
   const sh=rows.filter(o=>o.n).sort(cmp),rk=new Map();
   sh.forEach((o,k)=>{const p=sh[k-1];rk.set(o.i,p&&!cmp(p,o)?rk.get(p.i):k+1);});
   const list=sh.concat(rows.filter(o=>!o.n));
+  const shR=two?rows.map(o=>({i:o.i,...statR(o.q,r)})).filter(o=>o.n).sort(cmp):[],rkR=new Map();
+  shR.forEach((o,k)=>{const p=shR[k-1];rkR.set(o.i,p&&!cmp(p,o)?rkR.get(p.i):k+1);});
   const opt=(v,l)=>`<option value="${v}"${ui.g===v?" selected":""}>${l}</option>`;
   const stale=syncOn()&&!(db&&online&&live);
   return (stale?`<div class="card" style="border-color:#d33;color:#d33;font-weight:700">⚠ 同期が切れています。表示は${hmSync()?hmSync()+" 時点の":"この端末に保存された"}内容です。</div>`:"")+`<div class="card"><div class="row" style="margin:0"><b>${EV[ev].label}</b>
     <select data-act="g" style="margin-left:auto">${opt("all","男女すべて")}${opt("男","男子")}${opt("女","女子")}</select>
     <button data-act="csv">CSV</button></div>
-    <div class="mu" style="margin-top:6px">同点は ヒット数 → X → 10の数 の順。それでも同じなら同順位。</div></div>`+
-  list.map(o=>`<div class="card bc"><div class="rk">${rk.get(o.i)??"-"}</div>
+    <div class="mu" style="margin-top:6px">同点は ヒット数 → X → 10の数 の順。それでも同じなら同順位。</div>${two?`<div class="mu" style="margin-top:4px">順位と右の合計点は ${R.join("＋")} の合計です。<span class="dl">青い行</span>は、選択中の「${R[r]}」だけの成績です。</div>`:""}</div>`+
+  list.map(o=>{const sr=two?statR(o.q,r):null;return `<div class="card bc"><div class="rk">${rk.get(o.i)??"-"}</div>
     <div class="bi"><b>${esc(o.q.name)||"(未登録)"}</b><span class="mu">${esc(info(o.q))} ${pos(o.i)}</span><br>
-    <span class="mu">${EV[ev].R.map((d,r)=>d+" "+sum(o.q.sc[r])).join(" / ")}　X ${o.x}　10 ${o.t10}　Hit ${o.h}</span></div>
-    <div class="bt">${o.n?o.t:""}<small>/${EV[ev].max}</small></div></div>`).join("");
+    <span class="mu">${EV[ev].R.map((d,r)=>d+" "+sum(o.q.sc[r])).join(" / ")}　X ${o.x}　10 ${o.t10}　Hit ${o.h}</span>${two&&o.n?`<br><span class="dl">${R[r]} ${rkR.has(o.i)?rkR.get(o.i)+"位":"-"}　${R[r]}得点 ${sr.t}<small>/${EV[ev].max/R.length}</small>　X ${sr.x}　10 ${sr.t10}　Hit ${sr.h}</span>`:""}</div>
+    <div class="bt">${o.n?o.t:""}<small>/${EV[ev].max}</small></div></div>`;}).join("");
 }
 function vRo(){
   const{ev}=cur();
@@ -406,6 +484,11 @@ function vSy(){
     <div class="mu" style="margin-top:6px">未送信: ${pendN()}件（電波が戻ると自動で送信します）</div>
     <div class="row"><button data-act="link">入力用リンクをコピー</button><button data-act="linkv">閲覧専用リンクをコピー</button><button data-act="disc">切断</button><button data-act="export">端末データをJSON保存</button><button data-act="import">JSONを読み込む</button><input type="file" id="impf" data-act="impfile" accept=".json,application/json" hidden></div>
     <div class="mu" style="margin-top:8px">複数端末で使うには、このHTMLをWeb上(GitHub Pages / Netlify など)に置いてください。</div></div>
+    <div class="card"><b>Googleスプレッドシートへ送信</b>
+      <div class="mu" style="margin:6px 0">Apps Script のウェブアプリURLを貼り付けて「保存」します。「6本を記録」したフレームと名簿が、数秒でシートに反映されます。</div>
+      <input class="in" id="su" value="${esc(SU)}" placeholder="https://script.google.com/macros/s/.../exec" style="width:100%">
+      <div class="mu" style="margin-top:6px">シート未送信: ${sq.size}件（通信が戻ると自動で再送します）</div>
+      <div class="row"><button class="on" data-act="sheetsave">保存</button><button data-act="sheettest">接続テスト</button><button data-act="sendall">全データを今すぐ送信</button><button data-act="pull">シートから読み込む</button></div></div>
     <div class="card"><button data-act="reset" style="color:#d33">全データ消去</button></div>`;
 }
 
@@ -442,7 +525,7 @@ function recordEnds(all=false){
   if(!ends.length)return true;
   obFor();
   ends.forEach(e=>{q.locks[r][e]=true;if(syncOn()&&!VIEW)ob.e[[ev,i,r,e].join("|")]=1;});
-  saveOb();save();ui.k=firstEmpty();flush();
+  saveOb();save();ui.k=firstEmpty();flush();queueSheet(ev,i,r);
   return true;
 }
 function bkList(){
@@ -482,7 +565,7 @@ function importData(text){
   if(!confirm(`名簿${ros}名・記録済み${ends}フレームを読み込みます。\n\nこの端末の現在のデータは置き換わります（置き換え前のデータはバックアップとして保存されます）。${syncOn()?"\n同期中の場合、同期先と重なる欄は同期先の内容を優先し、空き欄だけを追加します。":""}\n\nよろしいですか？`))return;
   backup();state=n;obFor();ob={r:{},e:{},room};
   if(syncOn()&&!VIEW){localDelta(lastRemote||{});if(lastRemote)state=fromRemote(lastRemote);saveOb();}
-  save();ui.i=0;ui.k=firstEmpty();flush();render();
+  save();ui.i=0;ui.k=firstEmpty();flush();render();sheetAll();
   alert(`読み込みました（名簿${ros}名・記録済み${ends}フレーム）。`);
 }
 function dl(n,t,m){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([t],{type:m||"text/csv"}));a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
@@ -517,6 +600,18 @@ document.addEventListener("click",async e=>{
       const c=parseCfg($("#cfg").value);if(!c){alert("databaseURL を含む firebaseConfig を貼り付けてください");return;}
       localStorage.setItem(CK,JSON.stringify(c));localStorage.setItem(RK,($("#room").value.trim()||"kanto-2026-autumn").replace(/[.#$\[\]\/]/g,"-"));location.reload();return;}
     case"disc":localStorage.removeItem(CK);location.reload();return;
+    case"sheetsave":{const v=$("#su").value.trim();if(v&&!/^https:\/\//.test(v)){alert("https:// で始まるURLを入力してください");return;}
+      SU=v;localStorage.setItem("arc-sheet",SU);if(!SU){sq.clear();saveSq();}badge();
+      if(SU&&confirm("保存しました。いまの名簿・記録をシートに送信しますか？"))sheetAll();else if(!SU)alert("シート送信を解除しました");return;}
+    case"sheettest":(async()=>{
+      if(!SU){alert("先にURLを保存してください");return;}
+      let m="";
+      try{const g=await fetch(SU);m+="GET: "+(await g.text()).slice(0,80)+"\n";}catch(e){m+="GET失敗: "+e.message+"\n";}
+      try{const p=await fetch(SU,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({rows:[]})});m+="POST: "+(await p.text()).slice(0,200);}catch(e){m+="POST失敗: "+e.message;}
+      alert(m);
+    })();return;
+    case"sendall":if(!SU){alert("先にURLを保存してください");return;}sheetAll();alert("送信しました。数秒後にシートをご確認ください");return;
+    case"pull":await pullSheet();return;
     case"link":copy(link(false));return;
     case"linkv":copy(link(true));return;
     case"reset":if(confirm("全員のスコアと名簿を消去します(同期中は共有データも消えます)。よろしいですか?")){
@@ -537,9 +632,12 @@ document.addEventListener("change",async e=>{
   if(d.act==="auto"){auto=t.checked;localStorage.setItem(AK,auto?"1":"0");return;}
   if(d.act==="g"){ui.g=t.value;render();return;}
   if("dn" in d){dname=t.value.trim().slice(0,12)||dname;try{localStorage.setItem(DK,dname);}catch(_){}sendPres(true);return;}
-  if(d.f){const{ev}=cur();state[ev][+d.i][d.f]=t.value;save();if(syncOn()&&!VIEW){obFor();ob.r[rp(ev,+d.i,d.f)]=t.value;saveOb();flush();badge();}}
+  if(d.f){const{ev}=cur();state[ev][+d.i][d.f]=t.value;save();if(syncOn()&&!VIEW){obFor();ob.r[rp(ev,+d.i,d.f)]=t.value;saveOb();flush();badge();}queueSheet(ev,+d.i);}
 });
 
+setInterval(flushSheet,10000);
+if(window.addEventListener)window.addEventListener("online",flushSheet);
+if(sq.size)setTimeout(flushSheet,2000);
 render();
 connect();
 </script>
