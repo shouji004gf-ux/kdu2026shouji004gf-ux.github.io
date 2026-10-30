@@ -104,6 +104,8 @@ function vTop(){
       <textarea id="cfg" rows="4" style="width:100%;margin-top:6px;border-radius:10px;border:1px solid var(--ln);background:var(--cd);color:inherit;padding:8px" placeholder="firebaseConfig を貼り付け"></textarea>
       <div class="row"><span class="mu">大会ID</span><input id="room" value="${esc(room)}" style="flex:1"><button data-act="connect" class="on">接続</button></div>`;
     else h+=`<div class="row"><span class="mu">接続先 ${esc(host)}　大会ID</span><input id="room" value="${esc(room)}" style="flex:1;min-width:10em"><button data-act="reroom">変更して再接続</button></div>`;
+    h+=`<div class="row"><span class="mu">シート送信</span><input id="su" value="${esc(sheetUrl())}" placeholder="https://script.google.com/macros/s/.../exec" style="flex:1;min-width:10em"><button data-act="sheetsave">保存</button></div>
+      <div class="mu">${sheetUrl()?"訂正した行は、スプレッドシートにも自動で反映されます。":"未設定です。設定すると、訂正がスプレッドシートにも反映されます（メインアプリと同じURL）。"}</div>`;
     h+=`<div class="note">このモードは、同期先のデータを<b>直接</b>書き換えます。訂正は全端末に反映され、「訂正履歴」に残ります。</div>`;
   }else{
     h+=`<div class="row"><button data-act="pickjson">JSONファイルを選ぶ</button><input type="file" id="jf" data-act="jsonfile" accept=".json,application/json" hidden><span class="mu">${esc(jsonName||"（未選択）")}</span><button data-act="savejson" ${dirty?"":"disabled"} class="${dirty?"on":""}">訂正済みJSONを保存</button></div>
@@ -138,7 +140,7 @@ function vHist(){
 }
 function render(){
   $("#badge").textContent=badgeText();
-  const a=document.activeElement;if(a&&a.matches&&a.matches("textarea,input#room")&&$("#v").contains(a))return;
+  const a=document.activeElement;if(a&&a.matches&&a.matches("textarea,input#room,input#su")&&$("#v").contains(a))return;
   $("#v").innerHTML=vTop()+(ui.tab==="fix"?vFix():vHist());
 }
 function renderDlg(){
@@ -156,6 +158,22 @@ function renderDlg(){
   d.classList.toggle("on",true);updateSubmit();
 }
 function updateSubmit(){const b=$('#dlg [data-act="submit"]');if(!b||!ui.edit)return;b.disabled=!(changed(ui.edit)&&ui.edit.reason.trim()&&canWrite());}
+
+/* ---------- スプレッドシート（メインアプリと同じ形式で、訂正した行を送る） ---------- */
+const sheetUrl=()=>localStorage.getItem("arc-sheet")||"";
+const compIdx=(ev,r)=>COMP.findIndex(c=>c[0]===ev&&c[1]===r);
+function sheetRow(ed,fin){
+  const q=model.roster[ed.ev][ed.i],arrows=Array(36).fill("");
+  for(let e=0;e<6;e++){const a=e===ed.e?fin:model.ends[key(ed.ev,ed.i,ed.r,e)];if(a)a.forEach((v,j)=>{arrows[e*6+j]=v;});}
+  return{key:"C"+compIdx(ed.ev,ed.r)+"-"+String(ed.i).padStart(2,"0"),ev:EV[ed.ev].label,dist:EV[ed.ev].R[ed.r],t:(ed.i>>1)+1,pos:ed.i&1?"B":"A",
+    name:q.name,univ:q.univ,grade:q.grade,gender:q.gender,arrows};
+}
+async function sendSheet(ed,fin){
+  const url=sheetUrl();if(!url)return"none";
+  const ac=typeof AbortController!=="undefined"?new AbortController():null,tm=setTimeout(()=>{try{ac&&ac.abort();}catch(_){}},20000);
+  try{await fetch(url,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({rows:[sheetRow(ed,fin)]}),signal:ac?ac.signal:undefined});return"ok";}
+  catch(_){return"ng";}finally{clearTimeout(tm);}
+}
 
 /* ---------- 訂正の実行 ---------- */
 const ref=p=>db.ref("rooms/"+room+(p?"/"+p:""));
@@ -179,7 +197,9 @@ async function apply(ed,fin){
   if(res==="timeout"){alert("通信に時間がかかっています。反映されたかどうかは「訂正履歴」で確認してください。反映されていなければ、電波を確認してもう一度行ってください。");return;}
   if(!res.committed){alert("訂正できませんでした。表示後に、他の端末や他の人がこのフレームを変更した可能性があります。最新の内容を確認してから、やり直してください。");ui.edit=null;renderDlg();render();return;}
   try{await Promise.race([ref("corrections").push({...rec,t:firebase.database.ServerValue.TIMESTAMP}),wait(10000)]);}catch(_){toast("訂正は反映されましたが、履歴の保存に失敗しました。",true);}
-  ui.edit=null;renderDlg();render();toast("訂正しました："+who(ed));
+  const sh=await sendSheet(ed,fin);
+  ui.edit=null;renderDlg();render();toast("訂正しました："+who(ed)+(sh==="ok"?"（スプレッドシートにも送信しました）":""));
+  if(sh==="ng")toast("スプレッドシートへの送信に失敗しました。訂正は同期先に反映されています。電波を確認し、メインアプリの「全データを今すぐ送信」で再送してください。",true);
 }
 
 /* ---------- 接続 ---------- */
@@ -189,7 +209,7 @@ function parseCfg(t){
   return o.databaseURL?o:null;
 }
 (function(){const h=new URLSearchParams(location.hash.slice(1));
-  if(h.get("c")){try{localStorage.setItem(CK,atob(h.get("c")));if(h.get("r"))localStorage.setItem(RK,h.get("r"));room=localStorage.getItem(FR)||localStorage.getItem(RK)||room;}catch(_){}history.replaceState(null,"",location.pathname+location.search);}})();
+  if(h.get("c")||h.get("s")){try{if(h.get("c"))localStorage.setItem(CK,atob(h.get("c")));if(h.get("s"))localStorage.setItem("arc-sheet",h.get("s"));if(h.get("r"))localStorage.setItem(RK,h.get("r"));room=localStorage.getItem(FR)||localStorage.getItem(RK)||room;}catch(_){}history.replaceState(null,"",location.pathname+location.search);}})();
 function connect(){
   if(db)return;let cfg;try{cfg=JSON.parse(localStorage.getItem(CK));}catch(_){}
   if(!cfg||!cfg.databaseURL)return;
@@ -217,6 +237,8 @@ document.addEventListener("click",async e=>{
       dirty=false;render();toast("archery-corrected.json を保存しました。メインアプリの「JSONを読み込む」で読み込めます。");return;}
     case"edit":{const{ev,r}=cur(),a=model.ends[key(ev,ui.i,r,+d.e)];if(!a)return;
       ui.edit={ev,i:ui.i,r,e:+d.e,before:a.slice(),after:a.slice(),reason:""};renderDlg();return;}
+    case"sheetsave":{const v=$("#su").value.trim();if(v&&!/^https:\/\//.test(v)){alert("https:// で始まるURLを入力してください");return;}
+      if(v)localStorage.setItem("arc-sheet",v);else localStorage.removeItem("arc-sheet");toast(v?"シートURLを保存しました。":"シート送信を解除しました。");render();return;}
     case"cancel":ui.edit=null;renderDlg();return;
     case"submit":{const ed=ui.edit;if(!ed||!changed(ed)||!ed.reason.trim())return;const fin=finalAfter(ed);
       if(!confirm(`${who(ed)}\n\n変更前：${fmt(ed.before)}（計${sum(ed.before)}）\n変更後：${fmt(fin)}（計${sum(fin)}）\n理由：${ed.reason.trim()}\n\nこの内容で訂正します。${ui.mode==="online"?"全端末の記録に反映されます。":""}よろしいですか？`))return;
