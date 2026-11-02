@@ -27,6 +27,8 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border:1px solid 
 #dlg h3{margin:0 0 6px;font-size:16px}.six{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin:6px 0}.six select{width:100%;padding:8px 2px;text-align:center}.six select.chg{border:2px solid var(--rd)}.six div{text-align:center}
 #toast{position:fixed;left:8px;right:8px;top:calc(8px + env(safe-area-inset-top));z-index:30;max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:6px;pointer-events:none}
 #toast div{pointer-events:auto;background:#1f6b4f;color:#fff;padding:10px 12px;border-radius:10px;font-size:14px;box-shadow:0 4px 14px rgba(0,0,0,.35)}#toast div.e{background:#7a1f1f}
+.lt td,.lt th{padding:5px 3px;font-size:13px}.lt td.nm{text-align:left;white-space:nowrap}.lt td.nm .mu{display:block;font-size:11px}.lt .un{color:var(--mu)}.lr{cursor:pointer}.lr.cur{background:rgba(31,111,235,.10)}.lr:active{background:rgba(31,111,235,.2)}
+.acts{display:flex;gap:4px;justify-content:center;flex-wrap:wrap}.dng{color:var(--rd);border-color:var(--rd)}
 .h{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -111,39 +113,63 @@ function vTop(){
     h+=`<div class="row"><button data-act="pickjson">JSONファイルを選ぶ</button><input type="file" id="jf" data-act="jsonfile" accept=".json,application/json" hidden><span class="mu">${esc(jsonName||"（未選択）")}</span><button data-act="savejson" ${dirty?"":"disabled"} class="${dirty?"on":""}">訂正済みJSONを保存</button></div>
       <div class="note red"><b>同期を使っている端末では、このJSONを読み込んでも訂正は反映されません。</b>メインアプリの読み込みは「同期先と重なる欄は同期先を優先」のためです。同期中は「オンライン」モードで訂正してください。このモードは、同期を使わず1台で運用している場合向けです。</div>`;
   }
-  h+=`<div class="row"><button data-tab="fix" class="${ui.tab==="fix"?"on":""}">訂正</button><button data-tab="hist" class="${ui.tab==="hist"?"on":""}">訂正履歴（${hist.length}）</button></div></div>`;
+  h+=`<div class="row"><button data-tab="fix" class="${ui.tab==="fix"?"on":""}">訂正</button><button data-tab="list" class="${ui.tab==="list"?"on":""}">一覧</button><button data-tab="hist" class="${ui.tab==="hist"?"on":""}">訂正履歴（${hist.length}）</button></div></div>`;
   return h;
+}
+function vComp(){return`<div class="row">${COMP.map((c,i)=>`<button data-c="${i}" class="${ui.c===i?"on":""}">${c[2]}</button>`).join("")}</div>`;}
+function vList(){
+  if(ui.mode==="online"&&!live)return`<div class="card mu">${localStorage.getItem(CK)?"同期先のデータを受信するまでお待ちください。":"同期の設定を入力してください。"}</div>`;
+  if(ui.mode==="json"&&!jsonSrc)return`<div class="card mu">「JSONファイルを選ぶ」で、メインアプリの「端末データをJSON保存」で書き出したファイルを選んでください。</div>`;
+  const{ev,r}=cur(),R=model.roster[ev],two=EV[ev].R.length>1;let recAll=0,full=0;
+  const rows=R.map((q,i)=>{
+    let n=0,t=0,all=0;const subs=[];
+    for(let e=0;e<6;e++){const a=model.ends[key(ev,i,r,e)];if(a){n++;t+=sum(a);subs.push(sum(a));}else subs.push(null);}
+    if(two)EV[ev].R.forEach((_,rr)=>{for(let e=0;e<6;e++){const a=model.ends[key(ev,i,rr,e)];if(a)all+=sum(a);}});
+    recAll+=n;if(n===6)full++;
+    return`<tr data-row="${i}" class="lr${i===ui.i?" cur":""}"><td>${pos(i)}</td><td class="nm">${esc(q.name||"（未登録）")}<span class="mu">${esc(q.univ||"")}</span></td>${subs.map(v=>v==null?'<td class="un">—</td>':`<td>${v}</td>`).join("")}<td>${n}/6</td><td><b>${t}</b></td>${two?`<td>${all}</td>`:""}</tr>`;
+  });
+  return`<div class="card">${vComp()}<div class="mu" style="margin:4px 0">記録済み ${recAll}/${R.length*6} フレーム（6フレームそろった選手 ${full}/${R.length}名）。行をタップすると、その選手の訂正画面を開きます。</div>
+    <div style="overflow-x:auto"><table class="lt"><tr><th>立ち位置</th><th>氏名</th>${[1,2,3,4,5,6].map(n=>`<th>F${n}</th>`).join("")}<th>記録</th><th>${EV[ev].R[r]}計</th>${two?"<th>通算</th>":""}</tr>${rows.join("")}</table></div>
+    <div class="mu" style="margin-top:6px">F1〜F6は各フレームの小計（—は未記録）。${two?"「通算」は50mと30mの合計です。":""}</div></div>`;
 }
 function vFix(){
   if(ui.mode==="online"&&!live)return`<div class="card mu">${localStorage.getItem(CK)?"同期先のデータを受信するまでお待ちください。":"同期の設定を入力してください。"}</div>`;
   if(ui.mode==="json"&&!jsonSrc)return`<div class="card mu">「JSONファイルを選ぶ」で、メインアプリの「端末データをJSON保存」で書き出したファイルを選んでください。</div>`;
   const{ev,r}=cur(),R=model.roster[ev];
-  let h=`<div class="card"><div class="row">${COMP.map((c,i)=>`<button data-c="${i}" class="${ui.c===i?"on":""}">${c[2]}</button>`).join("")}</div>
-    <div class="row"><select data-i style="flex:1">${R.map((q,i)=>`<option value="${i}"${i===ui.i?" selected":""}>${pos(i)}　${esc(q.name||"(未登録)")}</option>`).join("")}</select></div>`;
+  let h=`<div class="card">${vComp()}
+    <div class="row"><button data-act="prev">◀ 前</button><select data-i style="flex:1">${R.map((q,i)=>`<option value="${i}"${i===ui.i?" selected":""}>${pos(i)}　${esc(q.name||"(未登録)")}</option>`).join("")}</select><button data-act="next">次 ▶</button></div>`;
   let tot=0;
   h+=`<table><tr><th>フレーム</th><th colspan="6">得点</th><th>小計</th><th></th></tr>`;
   for(let e=0;e<6;e++){
     const a=model.ends[key(ev,ui.i,r,e)];
-    if(a){tot+=sum(a);h+=`<tr><td>${e+1}</td>${a.map(v=>`<td>${sw(v)}</td>`).join("")}<td>${sum(a)}</td><td><button data-act="edit" data-e="${e}">訂正</button></td></tr>`;}
+    if(a){tot+=sum(a);h+=`<tr><td>${e+1}</td>${a.map(v=>`<td>${sw(v)}</td>`).join("")}<td>${sum(a)}</td><td><div class="acts"><button data-act="edit" data-e="${e}">訂正</button><button data-act="del" data-e="${e}" class="dng">削除</button></div></td></tr>`;}
     else h+=`<tr class="un"><td>${e+1}</td><td colspan="6">未記録（入力係がメインアプリで記録します）</td><td>—</td><td></td></tr>`;
   }
   h+=`<tr><th colspan="7" style="text-align:right">記録済みフレームの合計</th><th>${tot}</th><th></th></tr></table>
-    <div class="mu" style="margin-top:6px">訂正できるのは<b>記録済み</b>のフレームだけです。</div></div>`;
+    <div class="mu" style="margin-top:6px">訂正・削除できるのは<b>記録済み</b>のフレームだけです。選手を間違えて記録されたフレームは、「削除」で未記録に戻せます。</div></div>`;
   return h;
 }
 function vHist(){
   if(!hist.length)return`<div class="card mu">${ui.mode==="json"?"このファイルで行った訂正はまだありません。":"訂正の履歴はまだありません。"}</div>`;
   return hist.map(x=>{const c=COMP.find(c=>c[0]===x.ev&&c[1]===x.r),t=x.t?new Date(x.t).toLocaleString("ja-JP"):"";
-    return`<div class="card"><div class="h"><b>${esc(c?c[2]:"")}　${pos(x.i)} ${esc(x.name||"")}　第${x.e+1}フレーム</b><span class="mu">${esc(t)}</span></div>
-      <div style="margin:6px 0">${(x.before||[]).map(sw).join("")} → ${(x.after||[]).map(sw).join("")}<span class="mu">　計 ${sum(x.before||[])} → ${sum(x.after||[])}</span></div>
+    return`<div class="card"><div class="h"><b>${x.del?"【削除】":""}${esc(c?c[2]:"")}　${pos(x.i)} ${esc(x.name||"")}　第${x.e+1}フレーム</b><span class="mu">${esc(t)}</span></div>
+      <div style="margin:6px 0">${(x.before||[]).map(sw).join("")} → ${x.del?'<span class="warn"><b>削除</b>（未記録に戻しました）</span>':(x.after||[]).map(sw).join("")}<span class="mu">　計 ${sum(x.before||[])}${x.del?"":" → "+sum(x.after||[])}</span></div>
       <div class="mu">理由：${esc(x.reason||"")}　／　訂正者：${esc(x.by||"")}</div></div>`;}).join("");
 }
+let pend=false,lastKey=null;
 function render(){
-  $("#badge").textContent=badgeText();
-  const a=document.activeElement;if(a&&a.matches&&a.matches("textarea,input#room,input#su")&&$("#v").contains(a))return;
-  $("#v").innerHTML=vTop()+(ui.tab==="fix"?vFix():vHist());
+  $("#badge").textContent=badgeText();pend=false;
+  $("#v").innerHTML=vTop()+(ui.tab==="fix"?vFix():ui.tab==="list"?vList():vHist());
 }
+/* 同期でデータが届いたときの描画。リストを開いている最中・入力中は描き直さず、終わってから反映する */
+function softRender(){
+  const a=document.activeElement;
+  if(a&&a.matches&&a.matches("textarea,input,select")&&$("#v").contains(a)){$("#badge").textContent=badgeText();pend=true;return;}
+  render();
+}
+document.addEventListener("focusout",()=>setTimeout(()=>{if(pend)softRender();},250));
 function renderDlg(){
+  if(ui.del){renderDel();return;}
   const d=$("#dlg"),ed=ui.edit;
   if(!ed){d.classList.toggle("on",false);d.innerHTML="";return;}
   const fin=finalAfter(ed),ch=changed(ed);
@@ -157,23 +183,67 @@ function renderDlg(){
     <div class="row" style="justify-content:flex-end"><button data-act="cancel">キャンセル</button><button data-act="submit" class="pri">この内容で訂正する</button></div></div>`;
   d.classList.toggle("on",true);updateSubmit();
 }
-function updateSubmit(){const b=$('#dlg [data-act="submit"]');if(!b||!ui.edit)return;b.disabled=!(changed(ui.edit)&&ui.edit.reason.trim()&&canWrite());}
+const delFrames=dl=>Object.keys(dl.sel).filter(e=>dl.sel[e]&&dl.snap[e]).map(Number).sort();   // dl.snap = 画面を開いた時点の内容
+const delValid=()=>{const dl=ui.del;return!!(dl&&delFrames(dl).length&&dl.reason.trim()&&dl.word.trim()==="削除"&&canWrite());};
+function updateSubmit(){
+  if(ui.del){const b=$('#dlg [data-act="submitdel"]');if(b)b.disabled=!delValid();return;}
+  const b=$('#dlg [data-act="submit"]');if(!b||!ui.edit)return;b.disabled=!(changed(ui.edit)&&ui.edit.reason.trim()&&canWrite());
+}
+function whoP(ev,i,r){const c=COMP.find(x=>x[0]===ev&&x[1]===r),q=model.roster[ev][i];return`${c[2]}　${pos(i)} ${q.name||"(氏名未登録)"}`;}
+function renderDel(){
+  const d=$("#dlg"),dl=ui.del,rows=[];
+  for(let e=0;e<6;e++){const a=dl.snap[e];
+    if(a)rows.push(`<tr><td><input type="checkbox" data-d="${e}"${dl.sel[e]?" checked":""}></td><td>${e+1}</td>${a.map(v=>`<td>${sw(v)}</td>`).join("")}<td>${sum(a)}</td></tr>`);}
+  d.innerHTML=`<div class="bx"><h3 class="warn">記録の削除</h3><div class="mu" style="margin-bottom:6px">${esc(whoP(dl.ev,dl.i,dl.r))}</div>
+    <div class="note red">選手の選択ミスなどで、<b>別の選手に記録されてしまったフレーム</b>を削除します。削除したフレームは「未記録」に戻り、入力係が入力し直せます。<b>この操作は取り消せません。</b></div>
+    <div style="overflow-x:auto"><table><tr><th>削除</th><th>F</th><th colspan="6">得点</th><th>小計</th></tr>${rows.join("")}</table></div>
+    <div class="row"><input data-reason placeholder="削除の理由（必須）例：選手を間違えて入力" value="${esc(dl.reason)}" style="flex:1"></div>
+    <div class="row"><input data-word placeholder="確認のため「削除」と入力" value="${esc(dl.word)}" style="flex:1"></div>
+    <div class="row" style="justify-content:flex-end"><button data-act="cancel">キャンセル</button><button data-act="submitdel" class="pri">選んだフレームを削除する</button></div></div>`;
+  d.classList.toggle("on",true);updateSubmit();
+}
+async function applyDelete(dl,es){
+  const name=model.roster[dl.ev][dl.i].name||"",befores={},over={};
+  es.forEach(e=>{befores[e]=dl.snap[e].slice();over[e]=null;});
+  const recs=es.map(e=>({ev:dl.ev,i:dl.i,r:dl.r,e,name,before:befores[e],after:null,del:true,reason:dl.reason.trim(),by}));
+  const label=whoP(dl.ev,dl.i,dl.r)+"　第"+es.map(e=>e+1).join("・")+"フレーム";
+  if(ui.mode==="json"){
+    const q=jsonSrc.state[dl.ev][dl.i];es.forEach(e=>{for(let j=0;j<6;j++)q.sc[dl.r][e*6+j]=null;q.locks[dl.r][e]=false;});
+    model=fromState(jsonSrc.state);recs.forEach(x=>hist.unshift({...x,t:Date.now()}));dirty=true;
+    ui.del=null;renderDlg();render();toast("削除しました。「訂正済みJSONを保存」で保存してください。");return;
+  }
+  if(!(db&&live&&online)){alert("同期先に接続できていないため、削除できません。");return;}
+  const tx=ref(`scores/${dl.ev}/s${dl.i}/r${dl.r}`).transaction(rr=>{
+    if(rr===null)return rr;
+    for(const e of es){const cur=rr["end"+e]&&rr["end"+e].scores;if(!cur||JSON.stringify(cur)!==JSON.stringify(befores[e]))return;}   // 表示中の内容と違えば中止
+    for(const e of es){delete rr["end"+e];for(let j=0;j<6;j++)delete rr["a"+(e*6+j)];}
+    return rr;
+  });
+  const res=await Promise.race([tx,wait(20000)]);
+  if(res==="timeout"){alert("通信に時間がかかっています。削除されたかどうかは、一覧・訂正履歴で確認してください。削除されていなければ、電波を確認してもう一度行ってください。");return;}
+  if(!res.committed){alert("削除できませんでした。表示後に、他の端末や他の人がこのフレームを変更した可能性があります。最新の内容を確認してから、やり直してください。");ui.del=null;renderDlg();render();return;}
+  try{await Promise.race([Promise.all(recs.map(x=>ref("corrections").push({...x,t:firebase.database.ServerValue.TIMESTAMP}))),wait(10000)]);}catch(_){toast("削除は反映されましたが、履歴の保存に失敗しました。",true);}
+  const sh=await sendRow(dl.ev,dl.i,dl.r,over);
+  ui.del=null;renderDlg();render();toast("削除しました："+label+(sh==="ok"?"（スプレッドシートにも送信しました）":""));
+  if(sh==="ng")toast("スプレッドシートへの送信に失敗しました。削除は同期先に反映されています。電波を確認し、メインアプリの「全データを今すぐ送信」で再送してください。",true);
+}
 
 /* ---------- スプレッドシート（メインアプリと同じ形式で、訂正した行を送る） ---------- */
 const sheetUrl=()=>localStorage.getItem("arc-sheet")||"";
 const compIdx=(ev,r)=>COMP.findIndex(c=>c[0]===ev&&c[1]===r);
-function sheetRow(ed,fin){
-  const q=model.roster[ed.ev][ed.i],arrows=Array(36).fill("");
-  for(let e=0;e<6;e++){const a=e===ed.e?fin:model.ends[key(ed.ev,ed.i,ed.r,e)];if(a)a.forEach((v,j)=>{arrows[e*6+j]=v;});}
-  return{key:"C"+compIdx(ed.ev,ed.r)+"-"+String(ed.i).padStart(2,"0"),ev:EV[ed.ev].label,dist:EV[ed.ev].R[ed.r],t:(ed.i>>1)+1,pos:ed.i&1?"B":"A",
+function rowFor(ev,i,r,over){                       // over: {フレーム番号: 6本の得点 または null(削除)}
+  const q=model.roster[ev][i],arrows=Array(36).fill("");
+  for(let e=0;e<6;e++){const a=(e in over)?over[e]:model.ends[key(ev,i,r,e)];if(a)a.forEach((v,j)=>{arrows[e*6+j]=v;});}
+  return{key:"C"+compIdx(ev,r)+"-"+String(i).padStart(2,"0"),ev:EV[ev].label,dist:EV[ev].R[r],t:(i>>1)+1,pos:i&1?"B":"A",
     name:q.name,univ:q.univ,grade:q.grade,gender:q.gender,arrows};
 }
-async function sendSheet(ed,fin){
+async function sendRow(ev,i,r,over){
   const url=sheetUrl();if(!url)return"none";
   const ac=typeof AbortController!=="undefined"?new AbortController():null,tm=setTimeout(()=>{try{ac&&ac.abort();}catch(_){}},20000);
-  try{await fetch(url,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({rows:[sheetRow(ed,fin)]}),signal:ac?ac.signal:undefined});return"ok";}
+  try{await fetch(url,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({rows:[rowFor(ev,i,r,over)]}),signal:ac?ac.signal:undefined});return"ok";}
   catch(_){return"ng";}finally{clearTimeout(tm);}
 }
+const sendSheet=(ed,fin)=>sendRow(ed.ev,ed.i,ed.r,{[ed.e]:fin});
 
 /* ---------- 訂正の実行 ---------- */
 const ref=p=>db.ref("rooms/"+room+(p?"/"+p:""));
@@ -215,16 +285,21 @@ function connect(){
   if(!cfg||!cfg.databaseURL)return;
   if(!window.firebase||!firebase.database){err="同期用の部品を読み込めません。通信を確認して再読み込みしてください";return;}
   try{if(!firebase.apps.length)firebase.initializeApp(cfg);db=firebase.database();}catch(e){err="同期の設定に問題があります";return;}
-  db.ref(".info/connected").on("value",s=>{online=!!s.val();render();});
-  ref().on("value",snap=>{const v=snap.val();err="";live=true;model=fromRemote(v);
-    hist=Object.entries((v&&v.corrections)||{}).map(([id,x])=>({id,...x})).sort((a,b)=>(b.t||0)-(a.t||0));render();},
-    ()=>{err="同期先を読み取れません（ルール/URLを確認）";render();});
+  db.ref(".info/connected").on("value",s=>{const was=online;online=!!s.val();if(was!==online)softRender();});
+  ref().on("value",snap=>{
+    const v=snap.val(),k=JSON.stringify([v&&v.roster,v&&v.scores,v&&v.corrections]),first=!live,hadErr=!!err;
+    err="";live=true;
+    if(!first&&!hadErr&&k===lastKey)return;                 // 他端末の「入力中」表示などは対象外
+    lastKey=k;model=fromRemote(v);
+    hist=Object.entries((v&&v.corrections)||{}).map(([id,x])=>({id,...x})).sort((a,b)=>(b.t||0)-(a.t||0));softRender();},
+    ()=>{err="同期先を読み取れません（ルール/URLを確認）";softRender();});
 }
 
 /* ---------- イベント ---------- */
 document.addEventListener("click",async e=>{
-  const t=e.target.closest("[data-mode],[data-tab],[data-c],button[data-act]");if(!t||t.disabled)return;const d=t.dataset;
-  if(d.mode){ui.mode=d.mode;ui.tab="fix";ui.edit=null;renderDlg();render();return;}
+  const t=e.target.closest("[data-mode],[data-tab],[data-c],[data-row],button[data-act]");if(!t||t.disabled)return;const d=t.dataset;
+  if(d.row!=null){ui.i=+d.row;ui.tab="fix";render();try{window.scrollTo(0,0);}catch(_){}return;}
+  if(d.mode){ui.mode=d.mode;ui.tab="fix";ui.edit=null;ui.del=null;renderDlg();render();return;}
   if(d.tab){ui.tab=d.tab;render();return;}
   if(d.c!=null){ui.c=+d.c;ui.i=Math.min(ui.i,29);render();return;}
   switch(d.act){
@@ -236,10 +311,17 @@ document.addEventListener("click",async e=>{
       const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(out)],{type:"application/json"}));a.download="archery-corrected.json";a.click();
       dirty=false;render();toast("archery-corrected.json を保存しました。メインアプリの「JSONを読み込む」で読み込めます。");return;}
     case"edit":{const{ev,r}=cur(),a=model.ends[key(ev,ui.i,r,+d.e)];if(!a)return;
-      ui.edit={ev,i:ui.i,r,e:+d.e,before:a.slice(),after:a.slice(),reason:""};renderDlg();return;}
+      ui.del=null;ui.edit={ev,i:ui.i,r,e:+d.e,before:a.slice(),after:a.slice(),reason:""};renderDlg();return;}
+    case"del":{const{ev,r}=cur();if(!model.ends[key(ev,ui.i,r,+d.e)])return;const snap={};for(let e=0;e<6;e++){const a=model.ends[key(ev,ui.i,r,e)];if(a)snap[e]=a.slice();}
+      ui.edit=null;ui.del={ev,i:ui.i,r,snap,sel:{[+d.e]:true},reason:"",word:""};renderDlg();return;}
+    case"submitdel":{const dl=ui.del;if(!dl||!delValid())return;const es=delFrames(dl);
+      if(!confirm(`${whoP(dl.ev,dl.i,dl.r)}\n\n削除するフレーム：\n${es.map(e=>{const a=dl.snap[e];return"　第"+(e+1)+"フレーム　"+fmt(a)+"（計"+sum(a)+"）";}).join("\n")}\n\n理由：${dl.reason.trim()}\n\n削除すると「未記録」に戻ります。${ui.mode==="online"?"全端末の記録に反映されます。":""}この操作は取り消せません。よろしいですか？`))return;
+      await applyDelete(dl,es);return;}
     case"sheetsave":{const v=$("#su").value.trim();if(v&&!/^https:\/\//.test(v)){alert("https:// で始まるURLを入力してください");return;}
       if(v)localStorage.setItem("arc-sheet",v);else localStorage.removeItem("arc-sheet");toast(v?"シートURLを保存しました。":"シート送信を解除しました。");render();return;}
-    case"cancel":ui.edit=null;renderDlg();return;
+    case"prev":ui.i=(ui.i+29)%30;render();return;
+    case"next":ui.i=(ui.i+1)%30;render();return;
+    case"cancel":ui.edit=null;ui.del=null;renderDlg();return;
     case"submit":{const ed=ui.edit;if(!ed||!changed(ed)||!ed.reason.trim())return;const fin=finalAfter(ed);
       if(!confirm(`${who(ed)}\n\n変更前：${fmt(ed.before)}（計${sum(ed.before)}）\n変更後：${fmt(fin)}（計${sum(fin)}）\n理由：${ed.reason.trim()}\n\nこの内容で訂正します。${ui.mode==="online"?"全端末の記録に反映されます。":""}よろしいですか？`))return;
       await apply(ed,fin);return;}
@@ -257,10 +339,13 @@ document.addEventListener("change",async e=>{
     ui.i=0;try{t.value="";}catch(_){}render();return;}
   if("by" in d){by=t.value.trim().slice(0,12)||by;try{localStorage.setItem(FB,by);}catch(_){}return;}
   if("i" in d&&t.tagName==="SELECT"){ui.i=+t.value;render();return;}
+  if("d" in d&&ui.del){ui.del.sel[+d.d]=t.checked;renderDlg();return;}
   if("j" in d&&ui.edit){ui.edit.after[+d.j]=t.value;renderDlg();return;}
   if("sort" in d){ui.sort=t.checked;renderDlg();return;}
 });
-document.addEventListener("input",e=>{const t=e.target;if(t.dataset&&"reason" in t.dataset&&ui.edit){ui.edit.reason=t.value;updateSubmit();}});
+document.addEventListener("input",e=>{const t=e.target;if(!t.dataset)return;
+  if("reason" in t.dataset){const o=ui.del||ui.edit;if(o){o.reason=t.value;updateSubmit();}}
+  if("word" in t.dataset&&ui.del){ui.del.word=t.value;updateSubmit();}});
 connect();render();
 </script>
 </body></html>
